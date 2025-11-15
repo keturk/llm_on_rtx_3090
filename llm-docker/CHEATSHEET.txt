@@ -1,0 +1,91 @@
+╔═══════════════════════════════════════════════════════════════╗
+║                 LLM Docker - Quick Start Cheat Sheet          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 INITIAL SETUP (One Time)
+─────────────────────────────────────────────────────────────────
+./setup.sh                          # Run first-time setup
+
+🚀 START SERVICES
+─────────────────────────────────────────────────────────────────
+./scripts/start-ollama.sh           # Start Ollama (recommended)
+./scripts/start-vllm.sh [model]     # Start vLLM
+./scripts/start-tgi.sh [model]      # Start TGI
+./scripts/stop-all.sh               # Stop everything
+
+📦 OLLAMA COMMANDS (Inside Container)
+─────────────────────────────────────────────────────────────────
+docker exec -it ollama ollama list
+docker exec -it ollama ollama pull llama3.2:3b
+docker exec -it ollama ollama run llama3.2:3b
+docker exec -it ollama ollama rm llama3.2:3b
+
+⚡ QUICK DOWNLOADS
+─────────────────────────────────────────────────────────────────
+./scripts/batch-pull-models.sh small    # 3-8B models
+./scripts/batch-pull-models.sh medium   # 14B Q4 models
+./scripts/batch-pull-models.sh large    # 70B Q2 models
+
+🧪 TESTING
+─────────────────────────────────────────────────────────────────
+./scripts/test-model.sh ollama "Hello!"
+./scripts/benchmark.sh ollama 10
+
+📊 MONITORING
+─────────────────────────────────────────────────────────────────
+docker compose ps                   # Service status
+docker stats                        # Resource usage
+watch -n 1 nvidia-smi              # GPU monitoring
+docker compose logs ollama         # View logs
+
+🎯 RECOMMENDED TESTING ORDER
+─────────────────────────────────────────────────────────────────
+1. Start Ollama:     ./scripts/start-ollama.sh
+2. Pull small model: docker exec -it ollama ollama pull llama3.2:3b
+3. Test it:          docker exec -it ollama ollama run llama3.2:3b
+4. Try larger:       docker exec -it ollama ollama pull llama3.1:8b-q4
+5. Compare:          ./scripts/benchmark.sh ollama 10
+
+💡 POPULAR MODELS FOR RTX 3090 (24GB)
+─────────────────────────────────────────────────────────────────
+Small (Fast):
+  llama3.2:3b          ~6 GB     Good for testing
+  llama3.1:8b-q4       ~5 GB     Balanced quality/speed
+
+Medium (Quality):
+  llama3.1:8b          ~16 GB    Full precision 8B
+  qwen2.5:14b-q4       ~8 GB     Strong reasoning
+
+Large (Max Quality):
+  llama3.1:70b-q2      ~19 GB    Aggressive quant, slow
+  llama3.1:70b-q3      ~24 GB    Better quality (tight fit)
+
+📁 KEY LOCATIONS
+─────────────────────────────────────────────────────────────────
+~/llm-docker/                       # Scripts & configs
+~/models -> /mnt/llm-models/      # 4TB - Model storage
+~/data -> /mnt/llm-data/          # 1TB - Working data
+
+🔗 API ENDPOINTS (When Running)
+─────────────────────────────────────────────────────────────────
+Ollama:  http://localhost:11434
+vLLM:    http://localhost:8000
+TGI:     http://localhost:8080
+
+📖 DOCUMENTATION
+─────────────────────────────────────────────────────────────────
+INSTALL.md           # Installation guide
+README.md            # Full documentation
+configs/MODEL_GUIDE.md  # Model recommendations
+
+🆘 COMMON ISSUES
+─────────────────────────────────────────────────────────────────
+OOM Error:    Use smaller model or lower quantization
+Port in use:  ./scripts/stop-all.sh first
+Slow:         Check with nvidia-smi for GPU usage
+No GPU:       Verify: docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
+
+═══════════════════════════════════════════════════════════════
+Pro Tip: Start with llama3.2:3b to verify everything works,
+         then experiment with larger models and quantizations!
+═══════════════════════════════════════════════════════════════

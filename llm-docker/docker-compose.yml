@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # Ollama - Easy model management and testing
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ${OLLAMA_MODELS:-/mnt/llm-models/ollama}:/root/.ollama
+      - ${LOG_PATH:-/mnt/llm-data/logs}/ollama:/var/log/ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - OLLAMA_DEBUG=1
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+
+networks:
+  default:
+    name: llm-network

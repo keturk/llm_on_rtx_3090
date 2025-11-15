@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: vllm
+    restart: unless-stopped
+    ports:
+      - "${VLLM_PORT:-8000}:8000"
+    volumes:
+      - ${VLLM_CACHE:-/mnt/llm-models/vllm}:/root/.cache/huggingface
+      - ${LOG_PATH:-/mnt/llm-data/logs}/vllm:/var/log/vllm
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - HF_HOME=/root/.cache/huggingface
+    command: >
+      --host 0.0.0.0
+      --port 8000
+      --model ${VLLM_MODEL:-meta-llama/Llama-3.2-3B-Instruct}
+      --dtype auto
+      --gpu-memory-utilization ${GPU_MEMORY_UTILIZATION:-0.90}
+      --api-key ${VLLM_API_KEY:-token-abc123}
+    ipc: host
+
+networks:
+  default:
+    name: llm-network
