@@ -1,10 +1,8 @@
 #!/bin/bash
-# Download additional models for comprehensive benchmarking
-# RTX 3090 24GB - All models selected to fit entirely on GPU
+# Download all benchmark models for comprehensive testing
+# RTX 3090 24GB - All models selected to run entirely on GPU
 
-set -e
-
-echo "=== Downloading Additional Models for RTX 3090 ==="
+echo "=== Downloading Benchmark Models for RTX 3090 ==="
 echo "These models are selected to run entirely on 24GB VRAM"
 echo ""
 
@@ -18,34 +16,69 @@ fi
 echo "✅ Ollama is running"
 echo ""
 
-# Define models to download
+# Define all benchmark models (ordered by size)
 declare -A MODELS
-MODELS["mistral:7b"]="Well-rounded 7B model, fast and reliable"
-MODELS["qwen2.5:7b"]="Strong coding & reasoning capabilities"
-MODELS["phi3:14b"]="Microsoft's efficient model with 128k context"
-MODELS["gemma2:27b"]="Google's high-quality 27B model (Q4 quantization)"
-MODELS["codellama:34b"]="Meta's code-specialized model (Q4)"
-MODELS["deepseek-coder:33b"]="Advanced coding model (Q4)"
+MODELS["llama3.2:3b"]="Fast baseline, quick responses"
+MODELS["llama3.1:8b"]="Daily driver, well-rounded"
+MODELS["mistral:7b"]="General use, fast and reliable"
+MODELS["qwen2.5:7b"]="Strong coding & reasoning"
+MODELS["phi3:14b"]="Microsoft's efficient model, 128k context"
+MODELS["qwen2.5:14b"]="Production quality, excellent balance"
+MODELS["gemma2:27b"]="Google's high-quality 27B model"
+MODELS["qwen2.5:32b"]="Maximum quality for general tasks"
+MODELS["codellama:34b"]="Meta's code-specialized model"
+MODELS["deepseek-coder:33b"]="Advanced coding model"
 
-# Show plan
-echo "Models to download:"
-echo "==================="
-for model in "${!MODELS[@]}"; do
-    size=$(docker exec ollama ollama show "$model" 2>/dev/null | grep "size" | head -1 || echo "")
-    if docker exec ollama ollama list 2>/dev/null | grep -q "^${model}"; then
-        echo "✅ $model - already installed"
+# Show current status
+echo "Model Status:"
+echo "============="
+MISSING_MODELS=()
+INSTALLED_COUNT=0
+
+# Get the list of installed models once
+INSTALLED_LIST=$(docker exec ollama ollama list 2>/dev/null || echo "")
+
+for model in "llama3.2:3b" "llama3.1:8b" "mistral:7b" "qwen2.5:7b" "phi3:14b" "qwen2.5:14b" "gemma2:27b" "qwen2.5:32b" "codellama:34b" "deepseek-coder:33b"; do
+    if echo "$INSTALLED_LIST" | grep -q "^${model}"; then
+        echo "✅ $model - installed"
+        INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
     else
-        echo "📥 $model - ${MODELS[$model]}"
+        echo "📥 $model - needs download"
+        MISSING_MODELS+=("$model")
     fi
+done
+
+echo ""
+echo "Installed: $INSTALLED_COUNT/10 models"
+echo "To download: ${#MISSING_MODELS[@]} models"
+echo ""
+
+if [ ${#MISSING_MODELS[@]} -eq 0 ]; then
+    echo "✅ All benchmark models are already installed!"
+    echo ""
+    docker exec ollama ollama list
+    exit 0
+fi
+
+# Estimate download sizes
+echo "Estimated download sizes:"
+for model in "${MISSING_MODELS[@]}"; do
+    case $model in
+        "llama3.2:3b") echo "  $model: ~2 GB" ;;
+        "llama3.1:8b") echo "  $model: ~4.7 GB" ;;
+        "mistral:7b") echo "  $model: ~4 GB" ;;
+        "qwen2.5:7b") echo "  $model: ~4.7 GB" ;;
+        "phi3:14b") echo "  $model: ~7.9 GB" ;;
+        "qwen2.5:14b") echo "  $model: ~9 GB" ;;
+        "gemma2:27b") echo "  $model: ~16 GB" ;;
+        "qwen2.5:32b") echo "  $model: ~19 GB" ;;
+        "codellama:34b") echo "  $model: ~19 GB" ;;
+        "deepseek-coder:33b") echo "  $model: ~19 GB" ;;
+    esac
 done
 echo ""
 
-# Estimate total download size
-echo "Estimated total download: ~60-80 GB"
-echo "Estimated storage space needed: ~80-100 GB"
-echo ""
-
-read -p "Continue with download? (y/N) " -n 1 -r
+read -p "Download ${#MISSING_MODELS[@]} missing model(s)? (y/N) " -n 1 -r
 echo ""
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -60,14 +93,7 @@ echo "====================="
 FAILED_MODELS=()
 SUCCESS_MODELS=()
 
-for model in "${!MODELS[@]}"; do
-    if docker exec ollama ollama list 2>/dev/null | grep -q "^${model}"; then
-        echo ""
-        echo "⏭️  Skipping $model (already installed)"
-        SUCCESS_MODELS+=("$model")
-        continue
-    fi
-    
+for model in "${MISSING_MODELS[@]}"; do
     echo ""
     echo "📥 Downloading: $model"
     echo "   ${MODELS[$model]}"
@@ -87,7 +113,7 @@ echo "=== Download Summary ==="
 echo ""
 
 if [ ${#SUCCESS_MODELS[@]} -gt 0 ]; then
-    echo "✅ Successfully installed/available:"
+    echo "✅ Successfully downloaded:"
     for model in "${SUCCESS_MODELS[@]}"; do
         echo "   - $model"
     done
