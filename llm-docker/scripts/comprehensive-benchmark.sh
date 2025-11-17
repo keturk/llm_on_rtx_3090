@@ -2,8 +2,6 @@
 # Comprehensive LLM Benchmark Suite for RTX 3090
 # Tests speed, VRAM usage, and quality metrics
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RESULTS_DIR="${SCRIPT_DIR}/../benchmark_results"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -37,6 +35,24 @@ PROMPTS["math"]="What is 15% of 847? Show your work step by step"
 echo "=== LLM Comprehensive Benchmark Suite ===" | tee "$RESULTS_FILE"
 echo "Date: $(date)" | tee -a "$RESULTS_FILE"
 echo "System: Dell T5820 + RTX 3090 (24GB)" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+
+# Check if GPU metrics logger is running
+METRICS_LOG=$(ls -t "$RESULTS_DIR"/gpu_metrics_*.csv 2>/dev/null | head -1)
+if [ -n "$METRICS_LOG" ] && [ -f "$METRICS_LOG" ]; then
+    # Check if it's being updated (written to in last 5 seconds)
+    if [ $(($(date +%s) - $(stat -c %Y "$METRICS_LOG"))) -lt 5 ]; then
+        echo "✅ GPU metrics logger detected: $(basename "$METRICS_LOG")" | tee -a "$RESULTS_FILE"
+        echo "   GPU utilization will be captured accurately" | tee -a "$RESULTS_FILE"
+    else
+        echo "⚠️  GPU metrics log found but not active" | tee -a "$RESULTS_FILE"
+        echo "   Run ./scripts/gpu-metrics-logger.sh in another terminal for accurate GPU stats" | tee -a "$RESULTS_FILE"
+    fi
+else
+    echo "⚠️  No GPU metrics logger running" | tee -a "$RESULTS_FILE"
+    echo "   For accurate GPU utilization, run in another terminal:" | tee -a "$RESULTS_FILE"
+    echo "   ./scripts/gpu-metrics-logger.sh" | tee -a "$RESULTS_FILE"
+fi
 echo "" | tee -a "$RESULTS_FILE"
 
 # Check which models are installed
@@ -119,8 +135,8 @@ benchmark_model() {
 # Main benchmark results table
 echo "## Performance Results" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
-echo "| Model | Size | VRAM (MB) | GPU Util % | Temp °C | Tokens/sec | Time (s) | Quality |" | tee -a "$RESULTS_FILE"
-echo "|-------|------|-----------|------------|---------|------------|----------|---------|" | tee -a "$RESULTS_FILE"
+echo "| Model | Size | VRAM (MB) | Temp °C | Tokens/sec | Time (s) | Quality |" | tee -a "$RESULTS_FILE"
+echo "|-------|------|-----------|---------|------------|----------|---------|" | tee -a "$RESULTS_FILE"
 
 # Store detailed results
 declare -A MODEL_RESULTS
@@ -130,6 +146,9 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     echo "### Testing: $model"
     echo "Loading model..."
     
+    # Log timestamp for correlation with GPU metrics
+    echo "--- MODEL_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
+    
     # Pre-load model with a simple query
     docker exec ollama ollama run "$model" "test" > /dev/null 2>&1
     sleep 3
@@ -138,7 +157,9 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     model_size=$(docker exec ollama ollama list | grep "^${model}" | awk '{print $3}')
     
     # Run reasoning benchmark (primary metric)
+    echo "--- INFERENCE_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
     result=$(benchmark_model "$model" "reasoning" "${PROMPTS[reasoning]}")
+    echo "--- INFERENCE_END: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
     
     elapsed=$(echo "$result" | cut -d'|' -f1)
     vram=$(echo "$result" | cut -d'|' -f2)
@@ -162,49 +183,49 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     # Store results
     MODEL_RESULTS["$model"]="$vram|$gpu_util|$tps|$elapsed|$quality"
     
-    echo "| $model | $model_size | $vram | $gpu_util | $gpu_temp | $tps | $elapsed | $quality |" | tee -a "$RESULTS_FILE"
+    echo "| $model | $model_size | $vram | $gpu_temp | $tps | $elapsed | $quality |" | tee -a "$RESULTS_FILE"
     
     # Unload model to free VRAM
     echo "  Unloading model..."
     docker exec ollama ollama stop "$model" 2>/dev/null || true
+    echo "--- MODEL_END: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
     sleep 3
 done
 
 echo "" | tee -a "$RESULTS_FILE"
 
-# Detailed per-prompt benchmarks for selected models
+# Detailed per-prompt benchmarks for ALL available models
 echo "## Detailed Prompt Analysis" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 
-# Select a few key models for detailed testing
-KEY_MODELS=("llama3.1:8b" "qwen2.5:14b" "qwen2.5:32b")
-
-for model in "${KEY_MODELS[@]}"; do
-    if [[ " ${AVAILABLE_MODELS[*]} " =~ " ${model} " ]]; then
-        echo "### $model" | tee -a "$RESULTS_FILE"
-        echo "" | tee -a "$RESULTS_FILE"
-        echo "| Prompt Type | Time (s) | Tokens/sec | Output Length |" | tee -a "$RESULTS_FILE"
-        echo "|-------------|----------|------------|---------------|" | tee -a "$RESULTS_FILE"
+for model in "${AVAILABLE_MODELS[@]}"; do
+    echo "### $model" | tee -a "$RESULTS_FILE"
+    echo "" | tee -a "$RESULTS_FILE"
+    echo "| Prompt Type | Time (s) | Tokens/sec | Output Length |" | tee -a "$RESULTS_FILE"
+    echo "|-------------|----------|------------|---------------|" | tee -a "$RESULTS_FILE"
+    
+    echo ""
+    echo "=== Detailed testing: $model ==="
+    
+    # Load model
+    docker exec ollama ollama run "$model" "test" > /dev/null 2>&1
+    sleep 2
+    
+    for prompt_name in "simple" "reasoning" "coding" "creative" "math"; do
+        result=$(benchmark_model "$model" "$prompt_name" "${PROMPTS[$prompt_name]}")
+        elapsed=$(echo "$result" | cut -d'|' -f1)
+        tps=$(echo "$result" | cut -d'|' -f5)
+        tokens=$(echo "$result" | cut -d'|' -f6)
         
-        # Load model
-        docker exec ollama ollama run "$model" "test" > /dev/null 2>&1
-        sleep 2
-        
-        for prompt_name in "${!PROMPTS[@]}"; do
-            result=$(benchmark_model "$model" "$prompt_name" "${PROMPTS[$prompt_name]}")
-            elapsed=$(echo "$result" | cut -d'|' -f1)
-            tps=$(echo "$result" | cut -d'|' -f5)
-            tokens=$(echo "$result" | cut -d'|' -f6)
-            
-            echo "| $prompt_name | $elapsed | $tps | ~$tokens tokens |" | tee -a "$RESULTS_FILE"
-        done
-        
-        echo "" | tee -a "$RESULTS_FILE"
-        
-        # Unload
-        docker exec ollama ollama stop "$model" 2>/dev/null || true
-        sleep 3
-    fi
+        echo "| $prompt_name | $elapsed | $tps | ~$tokens tokens |" | tee -a "$RESULTS_FILE"
+    done
+    
+    echo "" | tee -a "$RESULTS_FILE"
+    
+    # Unload
+    echo "  Unloading $model..."
+    docker exec ollama ollama stop "$model" 2>/dev/null || true
+    sleep 3
 done
 
 # Summary and recommendations
@@ -222,25 +243,32 @@ echo "" | tee -a "$RESULTS_FILE"
 echo "=== Benchmark Complete ===" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 echo "Results saved to: $RESULTS_FILE" | tee -a "$RESULTS_FILE"
+echo "Timing markers saved to: $RESULTS_FILE.timing" | tee -a "$RESULTS_FILE"
+
+# Check if GPU metrics were logged
+if [ -n "$METRICS_LOG" ] && [ -f "$METRICS_LOG" ]; then
+    echo "" | tee -a "$RESULTS_FILE"
+    echo "GPU metrics were logged. Run analyzer for accurate GPU utilization:" | tee -a "$RESULTS_FILE"
+    echo "  ./scripts/analyze-gpu-metrics.sh" | tee -a "$RESULTS_FILE"
+fi
 
 # Also create a simple markdown table for README update
 README_TABLE="${RESULTS_DIR}/readme_table_${TIMESTAMP}.md"
 echo "## Updated Performance Table for README.md" > "$README_TABLE"
 echo "" >> "$README_TABLE"
-echo "| Model | VRAM Usage | GPU Utilization | Tokens/sec | Quality |" >> "$README_TABLE"
-echo "|-------|------------|-----------------|------------|---------|" >> "$README_TABLE"
+echo "| Model | VRAM Usage | Tokens/sec | Quality |" >> "$README_TABLE"
+echo "|-------|------------|------------|---------|" >> "$README_TABLE"
 
 for model in "${AVAILABLE_MODELS[@]}"; do
     if [[ -n "${MODEL_RESULTS[$model]}" ]]; then
         vram=$(echo "${MODEL_RESULTS[$model]}" | cut -d'|' -f1)
-        gpu_util=$(echo "${MODEL_RESULTS[$model]}" | cut -d'|' -f2)
         tps=$(echo "${MODEL_RESULTS[$model]}" | cut -d'|' -f3)
         quality=$(echo "${MODEL_RESULTS[$model]}" | cut -d'|' -f5)
         
         # Convert MB to GB for display
         vram_gb=$(echo "scale=0; $vram / 1024" | bc)
         
-        echo "| $model | ~${vram_gb}GB | ${gpu_util}% | $tps | $quality |" >> "$README_TABLE"
+        echo "| $model | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
     fi
 done
 
