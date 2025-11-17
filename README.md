@@ -206,6 +206,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) - GPU support in Docker
 - Ubuntu and the open-source community
 
+**Model Providers:**
+- [Meta AI](https://ai.meta.com/) - Llama 3.1, Llama 3.2, Code Llama
+- [Alibaba Cloud](https://www.alibabacloud.com/en/solutions/generative-ai/qwen) - Qwen 2.5 series
+- [Mistral AI](https://mistral.ai/) - Mistral 7B
+- [Microsoft](https://azure.microsoft.com/en-us/products/phi-3) - Phi-3
+- [Google DeepMind](https://deepmind.google/technologies/gemma/) - Gemma 2
+- [DeepSeek](https://www.deepseek.com/) - DeepSeek Coder
+
 ---
 
 **Questions or issues?** Open an issue on GitHub or check the troubleshooting sections in the setup guides.
