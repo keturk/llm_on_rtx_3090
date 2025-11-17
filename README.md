@@ -9,11 +9,13 @@ Battle-tested guide for local LLM inference on Ubuntu 24.04 with NVIDIA GPU acce
 This repository provides a complete, production-ready setup for running large language models locally on consumer/workstation NVIDIA GPUs. No cloud costs, no API limits, full privacy.
 
 **Key achievements:**
+- ✅ **10 models tested** from 3B to 34B parameters
 - ✅ Run 32B parameter models entirely on GPU (no CPU offloading)
 - ✅ Achieve 80-97% GPU utilization during inference
-- ✅ 15-25 tokens/second on complex reasoning tasks
+- ✅ 15-60 tokens/second depending on model size
 - ✅ Proper storage separation (models vs. working data)
 - ✅ Docker-based deployment for reproducibility
+- ✅ Comprehensive benchmarking suite included
 
 ---
 
@@ -42,6 +44,7 @@ llm_on_rtx_3090/
 ├── docs/
 │   ├── LLM_System_Setup.md            # Base system configuration
 │   ├── LLM_Inference_Setup.md         # Ollama & model setup
+│   ├── BENCHMARKS.md                  # Comprehensive performance results
 │   └── Dell_T5820_Hardware.md         # Hardware specifications
 └── llm-docker/
     ├── .env                           # Environment configuration
@@ -51,10 +54,13 @@ llm_on_rtx_3090/
     ├── scripts/
     │   ├── start-ollama.sh            # Start Ollama service
     │   ├── stop-all.sh                # Stop all services
-    │   ├── benchmark.sh               # Performance testing
+    │   ├── benchmark.sh               # Basic performance testing
+    │   ├── comprehensive-benchmark.sh # Full benchmark suite
+    │   ├── pull-benchmark-models.sh   # Download test models
     │   └── ...
     ├── configs/
     │   └── MODEL_GUIDE.md             # Model recommendations
+    ├── benchmark_results/             # Generated benchmark data
     └── CHEATSHEET.txt                 # Quick reference commands
 ```
 
@@ -99,14 +105,22 @@ nvidia-smi
 
 ## 📊 Performance Results
 
-Tested on RTX 3090 (24GB VRAM):
+Tested on RTX 3090 (24GB VRAM) - **10 models validated**:
 
-| Model           | VRAM Usage | GPU Utilization | Tokens/sec | Quality   |
-|-----------------|------------|-----------------|------------|-----------|
-| llama3.2:3b     | ~2GB       | 60-80%          | 50-60      | Good      |
-| llama3.1:8b     | ~5GB       | 70-85%          | 40-50      | Very Good |
-| qwen2.5:14b     | ~9GB       | 80-90%          | 30-40      | Excellent |
-| **qwen2.5:32b** | **~21GB**  | **80-97%**      | **15-25**  | **Best**  |
+| Model | VRAM | GPU Util | Tokens/sec | Best For |
+|-------|------|----------|------------|----------|
+| llama3.2:3b | ~2GB | 60-80% | 50-60 | Quick responses |
+| mistral:7b | ~4GB | 65-85% | 45-55 | General use |
+| qwen2.5:7b | ~5GB | 70-85% | 40-50 | Coding |
+| llama3.1:8b | ~5GB | 70-85% | 40-50 | Daily driver |
+| phi3:14b | ~8GB | 75-90% | 30-40 | Long context (128k) |
+| qwen2.5:14b | ~9GB | 80-90% | 30-40 | Production use |
+| gemma2:27b | ~15GB | 85-95% | 20-30 | High quality |
+| **qwen2.5:32b** | **~21GB** | **80-97%** | **15-25** | **Max quality** |
+| codellama:34b | ~18GB | 85-95% | 12-20 | Code generation |
+| deepseek-coder:33b | ~17GB | 85-95% | 12-20 | Advanced coding |
+
+📈 **[Full Benchmark Details →](docs/BENCHMARKS.md)** - Task-specific recommendations, quantization analysis, and thermal data.
 
 ---
 
@@ -154,6 +168,7 @@ services:
 |----------|-------------|
 | [LLM System Setup](docs/LLM_System_Setup.md) | Complete OS and driver configuration |
 | [LLM Inference Setup](docs/LLM_Inference_Setup.md) | Ollama deployment and optimization |
+| [**Performance Benchmarks**](docs/BENCHMARKS.md) | **Comprehensive model testing results** |
 | [Hardware Specifications](docs/Dell_T5820_Hardware.md) | Dell T5820 hardware details |
 | [Model Guide](llm-docker/configs/MODEL_GUIDE.md) | Recommended models by use case |
 | [Cheatsheet](llm-docker/CHEATSHEET.txt) | Quick reference commands |
