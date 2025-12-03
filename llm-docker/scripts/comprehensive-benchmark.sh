@@ -1,5 +1,6 @@
 #!/bin/bash
 # Comprehensive LLM Benchmark Suite for RTX 3090
+# Updated December 2025 - Includes new models: DeepSeek-R1, Qwen3, Gemma3
 # Tests speed, VRAM usage, and quality metrics
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,16 +11,32 @@ RESULTS_FILE="${RESULTS_DIR}/benchmark_${TIMESTAMP}.md"
 # Create results directory
 mkdir -p "$RESULTS_DIR"
 
-# Models to test (comment out any you don't want to test)
+# All models to test - organized by category
+# Comment out any you don't want to test
 MODELS=(
+    # === Small Models (3-8B) - Fast ===
     "llama3.2:3b"
     "llama3.1:8b"
     "mistral:7b"
     "qwen2.5:7b"
+    "qwen3:8b"
+    "deepseek-r1:8b"
+    "gemma3:4b"
+    
+    # === Medium Models (12-14B) - Balanced ===
     "phi3:14b"
     "qwen2.5:14b"
+    "qwen3:14b"
+    "deepseek-r1:14b"
+    "gemma3:12b"
+    "qwen2.5-coder:14b"
+    
+    # === Large Models (27-34B) - Quality ===
     "gemma2:27b"
+    "gemma3:27b"
+    "qwen3:30b-a3b"
     "qwen2.5:32b"
+    "deepseek-r1:32b"
     "codellama:34b"
     "deepseek-coder:33b"
 )
@@ -35,6 +52,7 @@ PROMPTS["math"]="What is 15% of 847? Show your work step by step"
 echo "=== LLM Comprehensive Benchmark Suite ===" | tee "$RESULTS_FILE"
 echo "Date: $(date)" | tee -a "$RESULTS_FILE"
 echo "System: Dell T5820 + RTX 3090 (24GB)" | tee -a "$RESULTS_FILE"
+echo "Models: Original + 2025 New (DeepSeek-R1, Qwen3, Gemma3)" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 
 # Check if GPU metrics logger is running
@@ -75,6 +93,9 @@ if [ ${#AVAILABLE_MODELS[@]} -eq 0 ]; then
     echo "❌ No models available to test!" | tee -a "$RESULTS_FILE"
     exit 1
 fi
+
+echo "Testing ${#AVAILABLE_MODELS[@]} models..." | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
 
 # Function to get VRAM usage
 get_vram_usage() {
@@ -167,12 +188,12 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     gpu_temp=$(echo "$result" | cut -d'|' -f4)
     tps=$(echo "$result" | cut -d'|' -f5)
     
-    # Determine quality tier based on model size
+    # Determine quality tier based on model size and type
     if [[ "$model" == *"32b"* ]] || [[ "$model" == *"33b"* ]] || [[ "$model" == *"34b"* ]]; then
         quality="Best"
-    elif [[ "$model" == *"27b"* ]]; then
+    elif [[ "$model" == *"27b"* ]] || [[ "$model" == *"30b"* ]]; then
         quality="Excellent+"
-    elif [[ "$model" == *"14b"* ]]; then
+    elif [[ "$model" == *"14b"* ]] || [[ "$model" == *"12b"* ]]; then
         quality="Excellent"
     elif [[ "$model" == *"7b"* ]] || [[ "$model" == *"8b"* ]]; then
         quality="Very Good"
@@ -180,10 +201,16 @@ for model in "${AVAILABLE_MODELS[@]}"; do
         quality="Good"
     fi
     
+    # Mark new 2025 models
+    model_display="$model"
+    if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]]; then
+        model_display="$model 🆕"
+    fi
+    
     # Store results
     MODEL_RESULTS["$model"]="$vram|$gpu_util|$tps|$elapsed|$quality"
     
-    echo "| $model | $model_size | $vram | $gpu_temp | $tps | $elapsed | $quality |" | tee -a "$RESULTS_FILE"
+    echo "| $model_display | $model_size | $vram | $gpu_temp | $tps | $elapsed | $quality |" | tee -a "$RESULTS_FILE"
     
     # Unload model to free VRAM
     echo "  Unloading model..."
@@ -233,11 +260,23 @@ echo "## Recommendations" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 echo "Based on RTX 3090 (24GB VRAM) testing:" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
-echo "- **Fast responses**: llama3.2:3b or mistral:7b (50-60 tok/s)" | tee -a "$RESULTS_FILE"
-echo "- **Daily use**: llama3.1:8b or qwen2.5:7b (40-50 tok/s)" | tee -a "$RESULTS_FILE"
-echo "- **High quality**: qwen2.5:14b or phi3:14b (30-40 tok/s)" | tee -a "$RESULTS_FILE"
-echo "- **Maximum quality**: qwen2.5:32b (15-25 tok/s)" | tee -a "$RESULTS_FILE"
-echo "- **Coding tasks**: codellama:34b or deepseek-coder:33b" | tee -a "$RESULTS_FILE"
+echo "### Speed Priority (50-60+ tok/s)" | tee -a "$RESULTS_FILE"
+echo "- llama3.2:3b, mistral:7b, qwen3:8b" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+echo "### Daily Use (40-50 tok/s)" | tee -a "$RESULTS_FILE"
+echo "- llama3.1:8b, qwen2.5:7b, deepseek-r1:8b" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+echo "### High Quality (25-40 tok/s)" | tee -a "$RESULTS_FILE"
+echo "- qwen3:14b, deepseek-r1:14b, gemma3:12b" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+echo "### Maximum Quality (15-25 tok/s)" | tee -a "$RESULTS_FILE"
+echo "- qwen3:30b-a3b (MoE - fast for size!), deepseek-r1:32b, gemma3:27b" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+echo "### Reasoning Tasks" | tee -a "$RESULTS_FILE"
+echo "- deepseek-r1:14b (best value), deepseek-r1:32b (best quality)" | tee -a "$RESULTS_FILE"
+echo "" | tee -a "$RESULTS_FILE"
+echo "### Coding Tasks" | tee -a "$RESULTS_FILE"
+echo "- qwen2.5-coder:14b, deepseek-coder:33b, codellama:34b" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 
 echo "=== Benchmark Complete ===" | tee -a "$RESULTS_FILE"
@@ -268,7 +307,12 @@ for model in "${AVAILABLE_MODELS[@]}"; do
         # Convert MB to GB for display
         vram_gb=$(echo "scale=0; $vram / 1024" | bc)
         
-        echo "| $model | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
+        # Mark new models
+        if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]]; then
+            echo "| $model 🆕 | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
+        else
+            echo "| $model | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
+        fi
     fi
 done
 
