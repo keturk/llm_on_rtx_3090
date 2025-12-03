@@ -12,7 +12,7 @@ This repository provides a complete, production-ready setup for running large la
 - ✅ **20 models tested** from 3B to 34B parameters
 - ✅ Run 32B parameter models entirely on GPU (no CPU offloading)
 - ✅ Achieve 80-97% GPU utilization during inference
-- ✅ 15-65 tokens/second depending on model size
+- ✅ 17-68 tokens/second depending on model size
 - ✅ Proper storage separation (models vs. working data)
 - ✅ Docker-based deployment for reproducibility
 - ✅ Comprehensive benchmarking suite included
@@ -116,36 +116,36 @@ Tested on RTX 3090 (24GB VRAM) - **20 models validated**:
 
 | Model | VRAM | Tokens/sec | Best For |
 |-------|------|------------|----------|
-| llama3.2:3b | ~2GB | 50-60 | Quick responses, testing |
-| gemma3:4b 🆕 | ~3GB | 50-60 | Multimodal, efficient |
-| mistral:7b | ~4GB | 45-55 | General use |
-| qwen2.5:7b | ~5GB | 40-50 | Coding |
-| llama3.1:8b | ~5GB | 40-50 | Daily driver |
-| qwen3:8b 🆕 | ~5GB | 40-50 | Next-gen quality |
-| deepseek-r1:8b 🆕 | ~5GB | 40-50 | Reasoning |
+| mistral:7b | ~6GB | 68.0 | Fastest overall |
+| qwen3:8b 🆕 | ~6GB | 60.5 | Next-gen quality |
+| deepseek-r1:8b 🆕 | ~6GB | 57.8 | Reasoning |
+| llama3.2:3b | ~4GB | 44.3 | Quick responses, testing |
+| llama3.1:8b | ~6GB | 43.0 | Daily driver |
+| qwen2.5:7b | ~6GB | 30.7 | Coding |
+| gemma3:4b 🆕 | ~6GB | 28.3 | Multimodal, efficient |
 
 ### Medium Models (12-14B) — Balanced
 
 | Model | VRAM | Tokens/sec | Best For |
 |-------|------|------------|----------|
-| phi3:14b | ~8GB | 30-40 | Long context (128k) |
-| gemma3:12b 🆕 | ~8GB | 30-40 | Multimodal balanced |
-| qwen2.5:14b | ~9GB | 30-40 | Production use |
-| qwen3:14b 🆕 | ~9GB | 30-40 | High quality |
-| deepseek-r1:14b 🆕 | ~9GB | 25-35 | Best reasoning value |
-| qwen2.5-coder:14b | ~9GB | 30-40 | Coding specialist |
+| deepseek-r1:14b 🆕 | ~10GB | 48.3 | Best reasoning value |
+| qwen3:14b 🆕 | ~10GB | 39.4 | High quality |
+| phi3:14b | ~10GB | 30.8 | Long context (128k) |
+| qwen2.5-coder:14b | ~10GB | 29.7 | Coding specialist |
+| qwen2.5:14b | ~10GB | 27.1 | Production use |
+| gemma3:12b 🆕 | ~11GB | 21.8 | Multimodal balanced |
 
 ### Large Models (27-34B) — Maximum Quality
 
 | Model | VRAM | Tokens/sec | Best For |
 |-------|------|------------|----------|
-| gemma2:27b | ~15GB | 20-30 | High quality |
-| gemma3:27b 🆕 | ~17GB | 20-30 | Multimodal large |
-| qwen3:30b-a3b 🆕 | ~18GB | 20-30 | MoE, fast for size |
-| deepseek-coder:33b | ~17GB | 12-20 | Advanced coding |
-| codellama:34b | ~18GB | 12-20 | Code generation |
-| **qwen2.5:32b** | **~21GB** | **15-25** | **Max general quality** |
-| **deepseek-r1:32b** 🆕 | **~19GB** | **15-20** | **Max reasoning quality** |
+| qwen3:30b-a3b 🆕 | ~19GB | 33.8 | MoE, fast for size! |
+| deepseek-r1:32b 🆕 | ~21GB | 28.8 | Max reasoning quality |
+| codellama:34b | ~21GB | 22.7 | Code generation |
+| deepseek-coder:33b | ~20GB | 21.9 | Advanced coding |
+| qwen2.5:32b | ~21GB | 19.9 | Max general quality |
+| gemma2:27b | ~18GB | 19.5 | High quality |
+| gemma3:27b 🆕 | ~20GB | 17.2 | Multimodal large |
 
 🆕 = New in December 2025 update
 
@@ -156,7 +156,7 @@ Tested on RTX 3090 (24GB VRAM) - **20 models validated**:
 ## 🆕 2025 Model Highlights
 
 ### DeepSeek-R1 (Reasoning Models)
-Chain-of-thought reasoning models that show their "thinking" process. Performance approaches OpenAI's O1 on many benchmarks.
+Chain-of-thought reasoning models that show their "thinking" process. Performance approaches OpenAI's O1 on many benchmarks. The 14B model achieves 48.3 tok/s — fastest in its quality class.
 
 ```bash
 docker exec -it ollama ollama run deepseek-r1:14b "Solve: If 3x + 7 = 22, what is x?"
@@ -164,14 +164,14 @@ docker exec -it ollama ollama run deepseek-r1:14b "Solve: If 3x + 7 = 22, what i
 ```
 
 ### Qwen3 (Next-Gen Qwen)
-Major upgrade from Qwen2.5. The 4B model rivals Qwen2.5-72B on many tasks!
+Major upgrade from Qwen2.5. The 14B runs at 39.4 tok/s vs Qwen2.5:14B at 27.1 tok/s — 45% faster! The 30B MoE model only activates 3B parameters per token, achieving 33.8 tok/s.
 
 ```bash
 docker exec -it ollama ollama run qwen3:14b "Write a Python async web scraper"
 ```
 
 ### Gemma3 (Multimodal)
-Google's latest with text + image understanding and 128K context window.
+Google's latest with text + image understanding and 128K context window. The 12B model uses ~11GB VRAM vs Gemma2:27B at ~18GB — similar quality at much lower resource usage.
 
 ```bash
 docker exec -it ollama ollama run gemma3:12b "Describe the key features of transformer architecture"
@@ -259,7 +259,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Ollama](https://ollama.ai/) - Simplified local LLM deployment
 - [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) - GPU support in Docker
-- Ubuntu and the open-source community
 
 **Model Providers:**
 - [Meta AI](https://ai.meta.com/) - Llama 3.1, Llama 3.2, Code Llama
