@@ -26,10 +26,12 @@ docker exec -it ollama ollama rm llama3.2:3b
 ./scripts/batch-pull-models.sh medium   # 14B Q4 models
 ./scripts/batch-pull-models.sh large    # 70B Q2 models
 
-🧪 TESTING
+🧪 TESTING & BENCHMARKING
 ─────────────────────────────────────────────────────────────────
-./scripts/test-model.sh ollama "Hello!"
-./scripts/benchmark.sh ollama 10
+./scripts/test-model.sh ollama "Hello!"        # Quick test
+./scripts/benchmark.sh ollama 10               # Single model benchmark
+./scripts/run-full-benchmark.sh                # Full automated benchmark (34 models)
+./scripts/run-full-benchmark.sh --skip-pull -y # Quick benchmark (no downloads)
 
 📊 MONITORING
 ─────────────────────────────────────────────────────────────────

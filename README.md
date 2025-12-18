@@ -9,7 +9,7 @@ Battle-tested guide for local LLM inference on Ubuntu 24.04 with NVIDIA GPU acce
 This repository provides a complete, production-ready setup for running large language models locally on consumer/workstation NVIDIA GPUs. No cloud costs, no API limits, full privacy.
 
 **Key achievements:**
-- ✅ **20 models tested** from 3B to 34B parameters
+- ✅ **34 models tested** from 3B to 34B parameters
 - ✅ Run 32B parameter models entirely on GPU (no CPU offloading)
 - ✅ Achieve 80-97% GPU utilization during inference
 - ✅ 17-68 tokens/second depending on model size
@@ -42,33 +42,38 @@ OS:      Ubuntu 24.04.3 LTS
 ```
 llm_on_rtx_3090/
 ├── README.md                          # You are here
+├── QUICK_START.md                     # 🚀 5-minute setup guide (start here!)
 ├── LICENSE                            # MIT License
 ├── docs/
-│   ├── LLM_System_Setup.md            # Base system configuration
-│   ├── LLM_Inference_Setup.md         # Ollama & model setup
-│   ├── BENCHMARKS.md                  # Comprehensive performance results
+│   ├── Models_and_Benchmarks.md       # 📊 Complete model guide & performance data
+│   ├── BENCHMARK_AUTOMATION.md        # 🤖 Automated benchmark guide
+│   ├── LLM_System_Setup.md            # System prerequisites & drivers
+│   ├── LLM_Inference_Setup.md         # Docker & Ollama configuration
 │   └── Dell_T5820_Hardware.md         # Hardware specifications
 └── llm-docker/
+    ├── README.md                      # Quick reference & commands
+    ├── CHEATSHEET.txt                 # Quick command reference
     ├── .env                           # Environment configuration
     ├── docker-compose.yml             # Ollama service
     ├── docker-compose.vllm.yml        # vLLM (optional)
     ├── docker-compose.tgi.yml         # Text Generation Inference (optional)
     ├── scripts/
     │   ├── start-ollama.sh            # Start Ollama service
-    │   ├── stop-all.sh                # Stop all services
-    │   ├── benchmark.sh               # Basic performance testing
+    │   ├── run-full-benchmark.sh      # 🆕 Automated full benchmark
     │   ├── comprehensive-benchmark.sh # Full benchmark suite
     │   ├── pull-benchmark-models.sh   # Download test models
+    │   ├── benchmark.sh               # Basic performance testing
     │   └── ...
     ├── configs/
-    │   └── MODEL_GUIDE.md             # Model recommendations
-    ├── benchmark_results/             # Generated benchmark data
-    └── CHEATSHEET.txt                 # Quick reference commands
+    │   └── MODEL_GUIDE.md             # Model testing strategy
+    └── benchmark_results/             # Generated benchmark data
 ```
 
 ---
 
 ## 🚀 Quick Start
+
+> **New User?** See [QUICK_START.md](QUICK_START.md) for a 5-minute setup guide!
 
 ### 1. Complete System Setup
 
@@ -102,6 +107,9 @@ docker exec -it ollama ollama run qwen3:14b "Explain quantum computing"
 # Try reasoning model (shows thinking process!)
 docker exec -it ollama ollama run deepseek-r1:14b "What is 15% of 847? Think step by step."
 
+# Run automated benchmarks
+./scripts/run-full-benchmark.sh
+
 # Check GPU utilization
 nvidia-smi
 ```
@@ -110,7 +118,7 @@ nvidia-smi
 
 ## 📊 Performance Results
 
-Tested on RTX 3090 (24GB VRAM) - **20 models validated**:
+Tested on RTX 3090 (24GB VRAM) - **34 models validated**:
 
 ### Small Models (3-8B) — Fast Responses
 
@@ -149,7 +157,7 @@ Tested on RTX 3090 (24GB VRAM) - **20 models validated**:
 
 🆕 = New in December 2025 update
 
-📈 **[Full Benchmark Details →](docs/BENCHMARKS.md)** - Task-specific recommendations, quantization analysis, and thermal data.
+📈 **[Full Model Guide & Benchmarks →](docs/Models_and_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
 
 ---
 
@@ -219,14 +227,22 @@ services:
 
 ## 📚 Documentation
 
+### Quick Start Guides
 | Document | Description |
 |----------|-------------|
+| [**QUICK_START.md**](QUICK_START.md) | **🚀 5-minute setup guide (start here!)** |
+| [Cheatsheet](llm-docker/CHEATSHEET.txt) | Quick reference commands |
+| [llm-docker README](llm-docker/README.md) | Command reference & troubleshooting |
+
+### Comprehensive Guides
+| Document | Description |
+|----------|-------------|
+| [**Models & Benchmarks**](docs/Models_and_Benchmarks.md) | **📊 Complete model guide & performance data** |
+| [Benchmark Automation](docs/BENCHMARK_AUTOMATION.md) | Automated benchmarking workflow |
 | [LLM System Setup](docs/LLM_System_Setup.md) | Complete OS and driver configuration |
 | [LLM Inference Setup](docs/LLM_Inference_Setup.md) | Ollama deployment and optimization |
-| [**Performance Benchmarks**](docs/BENCHMARKS.md) | **Comprehensive model testing results** |
 | [Hardware Specifications](docs/Dell_T5820_Hardware.md) | Dell T5820 hardware details |
-| [Model Guide](llm-docker/configs/MODEL_GUIDE.md) | Recommended models by use case |
-| [Cheatsheet](llm-docker/CHEATSHEET.txt) | Quick reference commands |
+| [Model Testing Strategy](llm-docker/configs/MODEL_GUIDE.md) | Model testing phases & quantization guide |
 
 ---
 

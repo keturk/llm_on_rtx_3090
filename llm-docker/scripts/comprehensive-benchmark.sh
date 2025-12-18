@@ -1,6 +1,7 @@
 #!/bin/bash
 # Comprehensive LLM Benchmark Suite for RTX 3090
-# Updated December 2025 - Includes new models: DeepSeek-R1, Qwen3, Gemma3
+# Updated December 2025 - 35+ models including:
+# DeepSeek-R1, Qwen3, Gemma3, Nemotron 3, Mistral Small 3, Ministral 3, Phi-4, QwQ
 # Tests speed, VRAM usage, and quality metrics
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -21,21 +22,36 @@ MODELS=(
     "qwen2.5:7b"
     "qwen3:8b"
     "deepseek-r1:8b"
+    "granite3-dense:8b"
+    "dolphin3"
     "gemma3:4b"
-    
-    # === Medium Models (12-14B) - Balanced ===
+    "nemotron-mini:4b"
+    "ministral-3:3b"
+    "phi3.5"
+    "phi4-mini"
+    "granite3.1-moe:3b"
+
+    # === Medium Models (8-14B) - Balanced ===
+    "ministral-3:8b"
     "phi3:14b"
+    "phi4"
     "qwen2.5:14b"
     "qwen3:14b"
     "deepseek-r1:14b"
     "gemma3:12b"
     "qwen2.5-coder:14b"
-    
-    # === Large Models (27-34B) - Quality ===
+    "ministral-3:14b"
+    "codestral:22b"
+
+    # === Large Models (24-34B) - Quality ===
+    "mistral-small:24b"
     "gemma2:27b"
     "gemma3:27b"
     "qwen3:30b-a3b"
+    "qwen3-coder:30b"
+    "nemotron-3-nano:30b"
     "qwen2.5:32b"
+    "qwq:32b"
     "deepseek-r1:32b"
     "codellama:34b"
     "deepseek-coder:33b"
