@@ -211,8 +211,8 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     docker exec "$OLLAMA_CONTAINER" ollama run "$model" "test" > /dev/null 2>&1
     sleep 3
     
-    # Get model size
-    model_size=$(docker exec "$OLLAMA_CONTAINER" ollama list | grep "^${model}" | awk '{print $3}')
+    # Get model size (use exact match with tab/space delimiter to avoid partial matches like phi4 vs phi4-mini)
+    model_size=$(docker exec "$OLLAMA_CONTAINER" ollama list | grep -E "^${model}[[:space:]]" | head -1 | awk '{print $3}' | tr -d '\n')
     
     # Run reasoning benchmark (primary metric)
     echo "--- INFERENCE_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
