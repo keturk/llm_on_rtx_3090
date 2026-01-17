@@ -1,0 +1,6 @@
+# Benchmark timing and raw data files
+*.timing
+*.csv
+
+# Claude Code settings
+.claude/
