@@ -151,14 +151,14 @@ docker compose restart ollama
 # Download all benchmark models
 ./scripts/pull-benchmark-models.sh
 
-# Run full automated benchmark (34 models)
+# Run full automated benchmark (48 models)
 ./scripts/run-full-benchmark.sh
 
 # Quick benchmark (skip downloads)
 ./scripts/run-full-benchmark.sh --skip-pull -y
 ```
 
-**For detailed benchmarking guide:** See [docs/BENCHMARK_AUTOMATION.md](docs/BENCHMARK_AUTOMATION.md)
+**For detailed benchmarking guide:** See [../../docs/Benchmark_Automation.md](../../docs/Benchmark_Automation.md)
 
 ---
 
@@ -207,14 +207,14 @@ curl http://localhost:8000/v1/completions \
 - **[../QUICK_START.md](../QUICK_START.md)** - 5-minute setup guide
 
 ### Comprehensive Guides
-- **[../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)** - Model selection & performance data
-- **[docs/BENCHMARK_AUTOMATION.md](docs/BENCHMARK_AUTOMATION.md)** - Automated benchmarking guide
+- **[../docs/Models_And_Benchmarks.md](../docs/Models_And_Benchmarks.md)** - Model selection & performance data
+- **[../docs/Benchmark_Automation.md](../docs/Benchmark_Automation.md)** - Automated benchmarking guide
 - **[../docs/LLM_System_Setup.md](../docs/LLM_System_Setup.md)** - System prerequisites & driver setup
 - **[../docs/LLM_Inference_Setup.md](../docs/LLM_Inference_Setup.md)** - Docker & Ollama configuration
-- **[INSTALL.md](INSTALL.md)** - Installation walkthrough
+- **[../docs/Install.md](../docs/Install.md)** - Installation walkthrough
 
 ### Configuration References
-- **[configs/MODEL_GUIDE.md](configs/MODEL_GUIDE.md)** - Model testing strategy
+- **[../docs/Model_Guide.md](../docs/Model_Guide.md)** - Model testing strategy
 - **[../docs/Dell_T5820_Hardware.md](../docs/Dell_T5820_Hardware.md)** - Hardware specifications
 
 ---
@@ -291,13 +291,18 @@ sudo lsof -i :11434
 
 | Use Case | Model | VRAM | Speed |
 |----------|-------|------|-------|
-| **Testing** | llama3.2:3b | ~2GB | 50-60 tok/s |
-| **Daily Use** | llama3.1:8b | ~5GB | 40-50 tok/s |
-| **Coding** | qwen2.5-coder:14b | ~9GB | 30-40 tok/s |
-| **Quality** | qwen2.5:32b | ~21GB | 15-25 tok/s |
-| **Reasoning** | deepseek-r1:14b | ~9GB | 25-35 tok/s |
+| **Fastest** | exaone-deep:7.8b | ~5GB | 90.1 tok/s |
+| **Testing** | llama3.2:3b | ~3GB | 52.3 tok/s |
+| **Daily Use** | qwen3:8b | ~5GB | 62.1 tok/s |
+| **Balanced** | llama3.1:8b | ~5GB | 42.8 tok/s |
+| **Reasoning** | deepseek-r1:14b | ~9GB | 56.6 tok/s |
+| **Coding** | qwen2.5-coder:14b | ~9GB | 29.2 tok/s |
+| **Quality** | qwen3:14b | ~9GB | 43.2 tok/s |
+| **Max Quality** | qwen2.5:32b | ~19GB | 21.4 tok/s |
+| **Vision** | qwen3-vl:8b | ~7GB | 40.9 tok/s |
+| **Multilingual** | aya-expanse:8b | ~6GB | 32.0 tok/s |
 
-**See full recommendations:** [../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)
+**See full 48-model benchmark:** [../docs/Models_And_Benchmarks.md](../docs/Models_And_Benchmarks.md)
 
 ---
 

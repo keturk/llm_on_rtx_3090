@@ -1,16 +1,40 @@
 # Models & Benchmarks - RTX 3090 (24GB)
 
-Complete guide to LLM selection, performance benchmarks, and recommendations for NVIDIA RTX 3090.
+**Comprehensive Technical Reference** - For quick model selection, see [Model_Guide.md](Model_Guide.md)
+
+Complete guide to LLM selection, performance benchmarks, and recommendations for NVIDIA RTX 3090. This document contains detailed technical analysis, benchmark data, and comprehensive model descriptions.
+
+**Last Updated:** January 2026
+**Models Tested:** 48 total (1.7B to 34B parameters)
+**Methodology:** Automated comprehensive benchmark suite with 5 diverse prompts per model
+
+---
+
+## System Configuration
+
+```
+CPU:     Intel Xeon W-2235 (6 cores / 12 threads, 3.8-4.6 GHz)
+RAM:     128 GB DDR4 ECC
+GPU:     NVIDIA RTX 3090 (24 GB GDDR6X)
+Driver:  NVIDIA 570.195.03
+CUDA:    12.8
+Backend: Ollama (Docker)
+OS:      Ubuntu 24.04.3 LTS
+```
 
 ---
 
 ## Table of Contents
+- [System Configuration](#system-configuration)
 - [Quick Reference](#quick-reference)
 - [Detailed Model Analysis](#detailed-model-analysis)
 - [Task-Specific Recommendations](#task-specific-recommendations)
+- [VRAM Usage & Planning](#vram-usage--planning)
+- [Temperature & Power Consumption](#temperature--power-consumption)
+- [Quantization Impact](#quantization-impact)
 - [Testing Strategy](#testing-strategy)
 - [Performance Benchmarks](#performance-benchmarks)
-- [2025 Model Updates](#2025-model-updates)
+- [Key Findings](#key-findings)
 
 ---
 
@@ -27,42 +51,60 @@ Complete guide to LLM selection, performance benchmarks, and recommendations for
 | **Reasoning** | deepseek-r1:8b | deepseek-r1:14b | deepseek-r1:32b |
 | **Agentic/RAG** | nemotron-mini:4b | nemotron-3-nano:30b | nemotron-3-nano:30b |
 
-### Performance Overview
+### Performance Overview (January 2026 - 48 Models Tested)
 
 | Model | Size | VRAM | Tokens/sec | Quality | Best For |
 |-------|------|------|------------|---------|----------|
-| **Small Models (3-8B) - Speed Focused** |
-| llama3.2:3b | 3B | ~2GB | 50-60 | Good | Testing, quick responses |
-| mistral:7b | 7B | ~4GB | 45-55 | Very Good | General use |
-| qwen2.5:7b | 7B | ~5GB | 40-50 | Very Good | Coding, reasoning |
-| llama3.1:8b | 8B | ~5GB | 40-50 | Very Good | Daily driver |
-| qwen3:8b 🆕 | 8B | ~5GB | 40-50 | Very Good | Next-gen Qwen |
-| deepseek-r1:8b 🆕 | 8B | ~5GB | 35-45 | Very Good | Reasoning tasks |
-| gemma3:4b 🆕 | 4B | ~3GB | 45-55 | Good | Multimodal |
-| nemotron-mini:4b 🆕 | 4B | ~3GB | 45-55 | Very Good | Roleplay, RAG, function calling |
-| ministral-3:3b 🆕 | 3B | ~2GB | 50-60 | Good | Edge, agentic, vision |
-| **Medium Models (12-14B) - Balanced** |
-| ministral-3:8b 🆕 | 8B | ~5GB | 40-50 | Very Good | Agentic, vision, multilingual |
-| phi4:14b 🆕 | 14B | ~9GB | 30-40 | Excellent | Advanced reasoning |
-| ministral-3:14b 🆕 | 14B | ~9GB | 30-40 | Excellent | Vision + function calling |
-| phi3:14b | 14B | ~8GB | 30-40 | Excellent | Long context (128k) |
-| qwen2.5:14b | 14B | ~9GB | 30-40 | Excellent | Production quality |
-| qwen3:14b 🆕 | 14B | ~9GB | 30-40 | Excellent | Enhanced quality |
-| deepseek-r1:14b 🆕 | 14B | ~9GB | 25-35 | Excellent | Best reasoning value |
-| gemma3:12b 🆕 | 12B | ~8GB | 32-42 | Excellent | Multimodal balanced |
-| qwen2.5-coder:14b | 14B | ~9GB | 30-40 | Excellent | Coding specialist |
-| **Large Models (24-34B) - Maximum Quality** |
-| mistral-small:24b 🆕 | 24B | ~14GB | 25-35 | Excellent+ | Best sub-70B, rivals Llama 3.3 70B |
-| gemma2:27b | 27B | ~15GB | 20-30 | Excellent+ | High-quality content |
-| gemma3:27b 🆕 | 27B | ~17GB | 18-28 | Excellent+ | Multimodal large |
-| qwen3:30b-a3b 🆕 | 30B MoE | ~18GB | 22-32 | Excellent+ | Fast for size (MoE) |
-| nemotron-3-nano:30b 🆕 | 30B MoE (3.5B active) | ~18GB | 25-35 | Excellent+ | Agentic AI, reasoning |
-| nemotron-3-nano:30b-a3b 🆕 | 30B MoE (3B active) | ~18GB | 25-35 | Excellent+ | Coding, reasoning, math |
-| qwen2.5:32b | 32B | ~21GB | 15-25 | Best | Maximum quality |
-| qwq:32b 🆕 | 32B | ~20GB | 15-25 | Excellent+ | Qwen reasoning specialist |
-| deepseek-r1:32b 🆕 | 32B | ~19GB | 15-25 | Best | Best reasoning |
-| codellama:34b | 34B | ~18GB | 12-20 | Best | Code generation |
-| deepseek-coder:33b | 33B | ~17GB | 12-20 | Best | Advanced coding |
+| **Small Models (1.7-9B) - Speed Focused** |
+| exaone-deep:7.8b 🆕 | 7.8B | ~5GB | 90.1 | Very Good | Fastest overall! |
+| marco-o1:7b 🆕 | 7B | ~5GB | 68.9 | Very Good | Reasoning specialist |
+| granite3.1-moe:3b | 3B | ~2GB | 65.7 | Good | Tiny MoE powerhouse |
+| smollm2:1.7b 🆕 | 1.7B | ~3GB | 64.6 | Very Good | Smallest, very efficient |
+| mistral:7b | 7B | ~5GB | 64.7 | Very Good | General use |
+| phi4-mini | - | ~3GB | 63.2 | Good | Compact quality |
+| qwen3:8b 🆕 | 8B | ~5GB | 62.1 | Very Good | Next-gen Qwen |
+| deepseek-r1:8b 🆕 | 8B | ~5GB | 60.9 | Very Good | Reasoning 8B |
+| llama3.2:3b | 3B | ~3GB | 52.3 | Good | Testing, quick responses |
+| nemotron-mini:4b | 4B | ~3GB | 50.2 | Good | Roleplay, RAG |
+| granite3-dense:8b | 8B | ~6GB | 45.3 | Very Good | Dense architecture |
+| llama3.1:8b | 8B | ~5GB | 42.8 | Very Good | Daily driver |
+| falcon3:7b 🆕 | 7B | ~5GB | 41.8 | Very Good | Open alternative |
+| qwen3-vl:8b 🆕 | 8B | ~7GB | 40.9 | Very Good | Vision + text |
+| hermes3:8b 🆕 | 8B | ~5GB | 38.2 | Very Good | Conversational |
+| ministral-3:3b | 3B | ~4GB | 36.0 | Good | Edge, agentic, vision |
+| dolphin3 | 8B | ~5GB | 36.2 | Good | Open assistant |
+| qwen2.5:7b | 7B | ~5GB | 34.7 | Very Good | Coding, reasoning |
+| aya-expanse:8b 🆕 | 8B | ~6GB | 32.0 | Very Good | Multilingual |
+| glm4:9b 🆕 | 9B | ~5GB | 31.4 | Good | Chinese-English |
+| ministral-3:8b | 8B | ~7GB | 30.8 | Very Good | Agentic, vision |
+| gemma3:4b 🆕 | 4B | ~4GB | 27.7 | Good | Multimodal compact |
+| **Medium Models (10-14B) - Balanced** |
+| deepseek-r1:14b 🆕 | 14B | ~9GB | 56.6 | Excellent | Best reasoning value |
+| qwen3:14b 🆕 | 14B | ~9GB | 43.2 | Excellent | Enhanced quality |
+| phi3:14b | 14B | ~9GB | 38.7 | Excellent | Long context (128k) |
+| falcon3:10b 🆕 | 10B | ~7GB | 37.2 | Good | Open medium |
+| phi4 | 14B | ~10GB | 34.1 | Excellent | Latest Microsoft |
+| olmo2:13b 🆕 | 13B | ~11GB | 33.9 | Good | Open research |
+| qwen2.5-coder:14b | 14B | ~9GB | 29.2 | Excellent | Coding specialist |
+| qwen2.5:14b | 14B | ~9GB | 29.2 | Excellent | Production quality |
+| ministral-3:14b | 14B | ~10GB | 23.1 | Excellent | Vision + function calling |
+| gemma3:12b 🆕 | 12B | ~9GB | 22.0 | Excellent | Multimodal balanced |
+| **Large Models (22-34B) - Maximum Quality** |
+| qwen3:30b-a3b 🆕 | 30B MoE | ~18GB | 43.7 | Excellent+ | MoE - fast for size! |
+| codestral:22b | 22B | ~13GB | 35.4 | Good | Code specialist |
+| nemotron-3-nano:30b | 30B | ~23GB | 33.5 | Excellent+ | Large efficient |
+| exaone-deep:32b 🆕 | 32B | ~19GB | 33.3 | Best | Reasoning 32B |
+| qwq:32b | 32B | ~19GB | 30.2 | Best | Deep reasoning |
+| deepseek-r1:32b 🆕 | 32B | ~19GB | 29.8 | Best | Max reasoning quality |
+| mistral-small:24b | 24B | ~14GB | 25.1 | Good | Sub-70B champion |
+| qwen3-coder:30b 🆕 | 30B | ~18GB | 24.3 | Excellent+ | Advanced coding |
+| codellama:34b | 34B | ~19GB | 23.9 | Best | Code generation |
+| qwen3-vl:32b 🆕 | 32B | ~23GB | 22.1 | Best | Vision + text large |
+| qwen2.5:32b | 32B | ~19GB | 21.4 | Best | Maximum quality |
+| deepseek-coder:33b | 33B | ~18GB | 21.5 | Best | Elite coding |
+| aya-expanse:32b 🆕 | 32B | ~20GB | 20.9 | Best | Multilingual large |
+| gemma2:27b | 27B | ~17GB | 20.4 | Excellent+ | Google's best |
+| gemma3:27b 🆕 | 27B | ~17GB | 18.0 | Excellent+ | Multimodal large |
 
 ---
 
@@ -429,7 +471,101 @@ OS:      Ubuntu 24.04.3 LTS
 
 ---
 
-## 2025 Model Updates
+## VRAM Usage & Planning
+
+```
+24 GB Total VRAM
+├── 2-5 GB    → Small models (1.7-8B)   - Can run 3+ simultaneously
+├── 5-10 GB   → Medium models (10-14B)  - Run 2 models
+├── 13-20 GB  → Large models (22-32B)   - Run 1 model only
+└── 20-24 GB  → Maximum (32-34B)        - Single model, uses ~87-96% VRAM
+```
+
+### Model Loading Times
+- **1.7-3B models**: ~1-2 seconds
+- **7-8B models**: ~3-5 seconds
+- **14B models**: ~6-10 seconds
+- **27-34B models**: ~15-25 seconds
+
+### Concurrent Loading
+- **Multiple small models**: 3-4 models under 8B can coexist
+- **Mixed sizes**: One 14B + one 3-8B works
+- **Large models**: 20GB+ models must run alone
+- **Ollama auto-unload**: Models unload after 5 minutes of inactivity
+- **Force unload**: `ollama stop <model-name>`
+
+---
+
+## Temperature & Power Consumption
+
+| Model Size | Idle Power | Peak Power | Temp Range | Notes |
+|------------|-----------|------------|------------|-------|
+| 1.7-3B | 30W | 100-150W | 35-45°C | Minimal heat |
+| 7-8B | 30W | 150-200W | 40-50°C | Light cooling needed |
+| 10-14B | 30W | 200-250W | 45-55°C | Active cooling recommended |
+| 22-27B | 30W | 250-300W | 50-65°C | Good airflow required |
+| 32-34B | 30W | 280-320W | 55-68°C | Sustained loads need <70°C |
+
+**Thermal Throttling:** RTX 3090 throttles at 83°C. For sustained workloads with large models, maintain temperatures below 70°C with adequate airflow.
+
+---
+
+## Key Findings (January 2026 - 48 Models)
+
+### Performance Highlights
+
+1. **Speed Champions:**
+   - **EXAONE-Deep 7.8B**: 90.1 tok/s - fastest model ever tested on RTX 3090
+   - **Marco-O1 7B**: 68.9 tok/s - fast reasoning specialist
+   - **Top small models** (7-9B) now exceed 60 tok/s
+
+2. **Best Value Models:**
+   - **Overall speed**: exaone-deep:7.8b (90.1 tok/s)
+   - **Balanced quality/speed**: qwen3:14b (43.2 tok/s - 48% faster than Qwen2.5)
+   - **Reasoning**: deepseek-r1:14b (56.6 tok/s - shows thinking process)
+   - **Coding**: qwen2.5-coder:14b or codestral:22b
+   - **Vision**: qwen3-vl:8b (40.9 tok/s, 7GB VRAM)
+   - **Multilingual**: aya-expanse:8b (32.0 tok/s)
+   - **Smallest**: smollm2:1.7b (64.6 tok/s, 3GB VRAM)
+
+3. **Sweet Spot Models:**
+   - **Speed priority:** mistral:7b or llama3.1:8b (40-55 tok/s)
+   - **Quality priority:** qwen2.5:32b or deepseek-r1:32b (15-25 tok/s)
+   - **Balanced:** qwen2.5:14b, deepseek-r1:14b, or phi4:14b (30-40 tok/s)
+   - **Best sub-70B:** mistral-small:24b (rivals Llama 3.3 70B)
+
+4. **VRAM Efficiency:**
+   - 32B is the maximum comfortable model size
+   - 34B models work but leave little headroom
+   - Q4 quantization essential for large models
+   - MoE models (qwen3:30b-a3b, nemotron-3-nano:30b) offer 30B total with ~3.5B active
+
+5. **Performance Patterns:**
+   - GPU utilization scales with model complexity (60-97%)
+   - Reasoning models show 2-3x slower speeds due to chain-of-thought
+   - Vision models (qwen3-vl, gemma3) maintain competitive speeds
+   - Small models have higher tokens/sec but lower quality
+   - MoE models provide excellent speed-to-quality ratio
+   - Temperature management crucial for sustained use
+
+6. **Best Value by Category:**
+   - **General use:** qwen2.5:14b or phi4:14b (best quality-to-resource ratio)
+   - **Long context:** phi3:14b (128k), nemotron-3-nano:30b (1M context!)
+   - **Coding:** qwen2.5-coder:14b (balanced), deepseek-coder:33b (best quality)
+   - **Reasoning:** deepseek-r1:14b (best value), qwq:32b (advanced)
+   - **Agentic AI/RAG:** nemotron-mini:4b (compact), nemotron-3-nano:30b (advanced)
+   - **Vision + Function Calling:** ministral-3:8b (balanced), ministral-3:14b (advanced)
+
+7. **2025 Highlights:**
+   - **NVIDIA Nemotron 3** - Hybrid Mamba-Transformer MoE, 4x faster, 1M context
+   - **Mistral Small 3** - 24B that rivals 70B models
+   - **Ministral 3** - Edge-optimized with vision capabilities
+   - **Phi-4** - Microsoft's latest reasoning champion
+   - **QwQ** - Qwen's dedicated reasoning model
+
+---
+
+## 2025/2026 Model Updates
 
 ### DeepSeek-R1 Series (Reasoning Specialists)
 New reasoning-focused models with chain-of-thought capabilities:
@@ -522,58 +658,40 @@ These models will NOT run well on 24GB VRAM:
 # Results saved to benchmark_results/
 ```
 
-For detailed benchmarking guide, see [BENCHMARK_AUTOMATION.md](BENCHMARK_AUTOMATION.md)
+For detailed benchmarking guide, see [Benchmark_Automation.md](Benchmark_Automation.md)
 
 ---
 
-## Key Findings
+## Related Documentation
 
-1. **Sweet Spot Models (2025):**
-   - **Speed priority:** mistral:7b or llama3.1:8b (40-55 tok/s)
-   - **Quality priority:** qwen2.5:32b or deepseek-r1:32b (15-25 tok/s)
-   - **Balanced:** qwen2.5:14b, deepseek-r1:14b, or phi4:14b (30-40 tok/s)
-   - **Best sub-70B:** mistral-small:24b (rivals Llama 3.3 70B)
-
-2. **VRAM Efficiency:**
-   - 32B is the maximum model size that fits comfortably
-   - 34B models work but leave little headroom
-   - MoE models (Nemotron 3 Nano, Qwen3:30b) offer 30B total with ~3.5B active
-   - Q4 quantization is essential for large models
-
-3. **Performance Patterns:**
-   - GPU utilization scales with model complexity
-   - Smaller models have higher tokens/sec but lower quality
-   - MoE models provide excellent speed-to-quality ratio
-   - Temperature management crucial for sustained use
-
-4. **Best Value by Category:**
-   - **General use:** qwen2.5:14b or phi4:14b (best quality-to-resource ratio)
-   - **Long context:** phi3:14b (128k), nemotron-3-nano:30b (1M context!)
-   - **Coding:** qwen2.5-coder:14b (balanced), deepseek-coder:33b (best quality)
-   - **Reasoning:** deepseek-r1:14b (best value), qwq:32b (advanced)
-   - **Agentic AI/RAG:** nemotron-mini:4b (compact), nemotron-3-nano:30b (advanced)
-   - **Vision + Function Calling:** ministral-3:8b (balanced), ministral-3:14b (advanced)
-
-5. **2025 Highlights:**
-   - **NVIDIA Nemotron 3** - Hybrid Mamba-Transformer MoE, 4x faster, 1M context
-   - **Mistral Small 3** - 24B that rivals 70B models
-   - **Ministral 3** - Edge-optimized with vision capabilities
-   - **Phi-4** - Microsoft's latest reasoning champion
-   - **QwQ** - Qwen's dedicated reasoning model
+- **[Model_Guide.md](Model_Guide.md)** - Quick model selection guide (start here for fast decisions)
+- **[Benchmark_Automation.md](Benchmark_Automation.md)** - Automated benchmarking workflow
+- **[Install.md](Install.md)** - Installation walkthrough
 
 ---
 
-**Last Updated:** December 17, 2025
+**Last Updated:** January 16, 2026
 **Hardware:** Dell T5820 + RTX 3090 (24GB)
-**Models Available:** 35+ (including latest 2025 releases)
-**New Additions:** Nemotron 3, Mistral Small 3, Ministral 3, Phi-4, QwQ, Llama 3.3 70B
-**Methodology:** Multiple runs per model, averaged results
+**Models Tested:** 48 total (1.7B to 34B parameters)
+**Date:** January 16, 2026 19:32:55 PST
+**Benchmark Results:** [benchmark_20260116_193255.md](../llm-docker/benchmark_results/benchmark_20260116_193255.md)
+**Methodology:** Automated comprehensive benchmark suite with 5 diverse prompts per model (simple, reasoning, coding, creative, math)
 
-## Sources
+### New in January 2026
+- DeepSeek-R1 series (8B, 14B, 32B) - Chain-of-thought reasoning
+- Qwen3 series (8B, 14B, 30B-a3b) - 48% faster than Qwen2.5
+- Qwen3-VL series (8B, 32B) - Vision + text models
+- Gemma3 series (4B, 12B, 27B) - Multimodal capabilities
+- EXAONE-Deep (7.8B, 32B) - LG's speed champion at 90.1 tok/s
+- Marco-O1 (7B) - Fast reasoning specialist
+- Falcon3 (7B, 10B) - TII's open alternative
+- Aya-Expanse (8B, 32B) - Cohere's multilingual models
+- GLM4 (9B) - Zhipu AI Chinese-English bilingual
+- SmolLM2 (1.7B) - HuggingFace's tiny powerhouse
+- OLMo2 (13B) - AI2's fully open research model
 
-- [NVIDIA Nemotron 3 Models](https://research.nvidia.com/labs/nemotron/Nemotron-3/)
+## Resources
+
 - [Ollama Models Library](https://ollama.com/library)
-- [Mistral Small 3 Release](https://mistral.ai/news/mistral-small-3)
-- [Best Ollama Models 2025 Guide](https://collabnix.com/best-ollama-models-in-2025-complete-performance-comparison/)
-- [NVIDIA Nemotron 3 Technical Details](https://bdtechtalks.com/2025/12/16/nvidia-nemotron-3/)
-- [VentureBeat: Nemotron 3 Hybrid MoE](https://venturebeat.com/ai/nvidia-debuts-nemotron-3-with-hybrid-moe-and-mamba-transformer-to-drive)
+- [Model_Guide.md](Model_Guide.md) - Model selection guide
+- [Latest Benchmark Results](../llm-docker/benchmark_results/)

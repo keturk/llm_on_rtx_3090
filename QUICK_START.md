@@ -42,14 +42,20 @@ Starts the Ollama Docker container and verifies connectivity.
 ## 3. Download Your First Model
 
 ```bash
-# Fast baseline (3B, ~2GB VRAM)
+# FASTEST (7.8B, ~5GB VRAM, 90.1 tok/s) 🆕
+docker exec -it ollama ollama pull exaone-deep:7.8b
+
+# Fast baseline (3B, ~3GB VRAM, 52.3 tok/s)
 docker exec -it ollama ollama pull llama3.2:3b
 
-# Balanced quality (8B, ~5GB VRAM)
-docker exec -it ollama ollama pull llama3.1:8b
+# Next-gen balanced (8B, ~5GB VRAM, 62.1 tok/s) 🆕
+docker exec -it ollama ollama pull qwen3:8b
 
-# High quality (14B, ~9GB VRAM)
-docker exec -it ollama ollama pull qwen2.5:14b
+# High quality (14B, ~9GB VRAM, 43.2 tok/s) 🆕
+docker exec -it ollama ollama pull qwen3:14b
+
+# Best reasoning (14B, ~9GB VRAM, 56.6 tok/s) 🆕
+docker exec -it ollama ollama pull deepseek-r1:14b
 ```
 
 ---
@@ -78,7 +84,7 @@ curl http://localhost:11434/api/generate -d '{
 # Quick benchmark (single model)
 ./scripts/benchmark.sh ollama 10
 
-# Full automated benchmark (34 models)
+# Full automated benchmark (48 models)
 ./scripts/run-full-benchmark.sh
 ```
 
@@ -104,20 +110,24 @@ watch -n 1 nvidia-smi
 
 ## Next Steps
 
-1. **Try More Models:** See [docs/Models_and_Benchmarks.md](docs/Models_and_Benchmarks.md) for recommendations
+1. **Try More Models:** See [docs/Models_And_Benchmarks.md](docs/Models_And_Benchmarks.md) for recommendations
 2. **Run Benchmarks:** Use `./scripts/run-full-benchmark.sh` to test performance
 3. **Read Full Guide:** Check [llm-docker/README.md](llm-docker/README.md) for detailed usage
 
 ---
 
-## Quick Model Recommendations
+## Quick Model Recommendations (January 2026)
 
 | Use Case | Model Command | VRAM | Speed |
 |----------|--------------|------|-------|
-| **Testing** | `ollama pull llama3.2:3b` | ~2GB | 50-60 tok/s |
-| **Daily Use** | `ollama pull llama3.1:8b` | ~5GB | 40-50 tok/s |
-| **Coding** | `ollama pull qwen2.5-coder:14b` | ~9GB | 30-40 tok/s |
-| **Quality** | `ollama pull qwen2.5:32b` | ~21GB | 15-25 tok/s |
+| **🏆 Fastest** | `ollama pull exaone-deep:7.8b` 🆕 | ~5GB | 90.1 tok/s |
+| **Testing** | `ollama pull llama3.2:3b` | ~3GB | 52.3 tok/s |
+| **Daily Use** | `ollama pull qwen3:8b` 🆕 | ~5GB | 62.1 tok/s |
+| **Reasoning** | `ollama pull deepseek-r1:14b` 🆕 | ~9GB | 56.6 tok/s |
+| **Coding** | `ollama pull qwen2.5-coder:14b` | ~9GB | 29.2 tok/s |
+| **Vision** | `ollama pull qwen3-vl:8b` 🆕 | ~7GB | 40.9 tok/s |
+| **Quality** | `ollama pull qwen3:14b` 🆕 | ~9GB | 43.2 tok/s |
+| **Max Quality** | `ollama pull qwen2.5:32b` | ~19GB | 21.4 tok/s |
 
 ---
 

@@ -128,7 +128,7 @@ sudo lsof -i :11434
 Once installed:
 
 1. **Read the README.md** for usage examples
-2. **Check MODEL_GUIDE.md** for model recommendations
+2. **Check Model_Guide.md** for model recommendations
 3. **Start testing**: Try different models and quantizations
 4. **Benchmark**: Use `./scripts/benchmark.sh` to compare performance
 

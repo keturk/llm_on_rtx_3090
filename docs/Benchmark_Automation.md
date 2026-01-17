@@ -22,7 +22,7 @@ This automated script handles everything:
 | Step | Action | Details |
 |------|--------|---------|
 | **1. Service Check** | Verifies Ollama is running | Automatically starts if needed |
-| **2. Model Download** | Checks for 20 benchmark models | Prompts to download missing models |
+| **2. Model Download** | Checks for 48 benchmark models | Prompts to download missing models |
 | **3. GPU Logging** | Starts background metrics logger | Tracks utilization, VRAM, temp, power |
 | **4. Benchmark** | Tests all installed models | Multiple prompts per model |
 | **5. Analysis** | Analyzes GPU metrics | Generates comprehensive reports |
@@ -30,8 +30,8 @@ This automated script handles everything:
 ### Time Estimates
 
 - **Quick run** (installed models only): 30-60 minutes
-- **Full run** (all 34 models): 3-5 hours
-- **Model downloads** (if needed): 60-120 minutes (depends on bandwidth)
+- **Full run** (all 48 models): 4-6 hours
+- **Model downloads** (if needed): 80-150 minutes (depends on bandwidth)
 
 ## Command Options
 
@@ -142,7 +142,7 @@ All results are saved to `benchmark_results/` with timestamps:
 
 **What happens:**
 1. Checks Ollama (starts if needed)
-2. Shows 34 models, prompts to download missing ones
+2. Shows 48 models, prompts to download missing ones
 3. Starts GPU logger in background
 4. Runs benchmark on all models
 5. Stops logger and analyzes metrics

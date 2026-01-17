@@ -76,9 +76,9 @@ TGI:     http://localhost:8080
 
 📖 DOCUMENTATION
 ─────────────────────────────────────────────────────────────────
-INSTALL.md           # Installation guide
+Install.md           # Installation guide
 README.md            # Full documentation
-configs/MODEL_GUIDE.md  # Model recommendations
+configs/Model_Guide.md  # Model recommendations
 
 🆘 COMMON ISSUES
 ─────────────────────────────────────────────────────────────────
