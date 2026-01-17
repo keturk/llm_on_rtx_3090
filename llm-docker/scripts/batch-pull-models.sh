@@ -57,9 +57,18 @@ echo ""
 echo "🚀 Starting download..."
 echo ""
 
+# Find Ollama container dynamically
+OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+if [ -z "$OLLAMA_CONTAINER" ]; then
+    echo "❌ Could not find Ollama container. Make sure it's running."
+    exit 1
+fi
+echo "📦 Using container: $OLLAMA_CONTAINER"
+echo ""
+
 for MODEL in $MODELS; do
     echo "⬇️  Pulling $MODEL..."
-    docker exec ollama ollama pull "$MODEL"
+    docker exec "$OLLAMA_CONTAINER" ollama pull "$MODEL"
     echo "✅ $MODEL downloaded"
     echo ""
 done
@@ -67,7 +76,7 @@ done
 echo "🎉 All models downloaded!"
 echo ""
 echo "List models:"
-echo "  docker exec ollama ollama list"
+echo "  docker exec $OLLAMA_CONTAINER ollama list"
 echo ""
 echo "Test a model:"
-echo "  docker exec -it ollama ollama run llama3.2:3b"
+echo "  docker exec -it $OLLAMA_CONTAINER ollama run llama3.2:3b"

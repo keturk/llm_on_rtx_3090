@@ -1,9 +1,9 @@
 #!/bin/bash
 # Download all benchmark models for comprehensive testing
-# RTX 3090 24GB - Updated December 2025
-# Includes: 35+ models - DeepSeek-R1, Qwen3, Gemma3, Nemotron 3, Mistral Small 3, Ministral 3, Phi-4, QwQ
+# RTX 3090 24GB - Updated January 2026
+# Includes: 45+ models - DeepSeek-R1, Qwen3, Gemma3, Qwen3-VL, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse, OLMo2, Hermes3
 
-echo "=== Downloading Benchmark Models for RTX 3090 (2025 Edition) ==="
+echo "=== Downloading Benchmark Models for RTX 3090 (2026 Edition) ==="
 echo "All models selected to run entirely on 24GB VRAM"
 echo ""
 
@@ -15,6 +15,15 @@ if ! curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then
 fi
 
 echo "✅ Ollama is running"
+echo ""
+
+# Find the Ollama container name dynamically
+OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+if [ -z "$OLLAMA_CONTAINER" ]; then
+    echo "❌ Could not find Ollama container. Make sure it's running."
+    exit 1
+fi
+echo "📦 Using container: $OLLAMA_CONTAINER"
 echo ""
 
 # Define all benchmark models (ordered by category and size)
@@ -35,6 +44,10 @@ MODELS["ministral-3:3b"]="🆕 Edge agentic + vision, ~2GB"
 MODELS["phi3.5"]="🆕 Microsoft 3.8B, ~2.5GB"
 MODELS["phi4-mini"]="🆕 Compact reasoning 128K, ~2.5GB"
 MODELS["granite3.1-moe:3b"]="🆕 IBM MoE 40 experts, ~2GB"
+MODELS["smollm2:1.7b"]="🆕 Tiny but capable, ~2GB"
+MODELS["falcon3:7b"]="🆕 TII efficient model, ~5GB"
+MODELS["marco-o1:7b"]="🆕 Alibaba reasoning + MCTS, ~5GB"
+MODELS["hermes3:8b"]="🆕 Advanced agentic, ~5GB"
 
 # Medium models (8-14B) - Balanced
 MODELS["ministral-3:8b"]="🆕 Agentic + vision, ~5GB"
@@ -47,6 +60,12 @@ MODELS["gemma3:12b"]="🆕 Multimodal balanced, ~8GB"
 MODELS["qwen2.5-coder:14b"]="Coding specialist, ~9GB"
 MODELS["ministral-3:14b"]="🆕 Advanced agentic + vision, ~9GB"
 MODELS["codestral:22b"]="🆕 Mistral coding specialist, ~13GB"
+MODELS["glm4:9b"]="🆕 Strong multilingual 128K, ~6GB"
+MODELS["exaone-deep:7.8b"]="🆕 LG reasoning model, ~5GB"
+MODELS["falcon3:10b"]="🆕 TII math/code specialist, ~6GB"
+MODELS["qwen3-vl:8b"]="🆕 Vision-language 256K, ~6GB"
+MODELS["aya-expanse:8b"]="🆕 Cohere 23-lang model, ~5GB"
+MODELS["olmo2:13b"]="🆕 AI2 open research, ~8GB"
 
 # Large models (24-34B) - Maximum quality
 MODELS["mistral-small:24b"]="🆕 Best sub-70B, ~14GB"
@@ -60,15 +79,18 @@ MODELS["qwq:32b"]="🆕 Qwen reasoning specialist, ~20GB"
 MODELS["deepseek-r1:32b"]="🆕 Best reasoning quality, ~19GB"
 MODELS["codellama:34b"]="Meta code specialist, ~18GB"
 MODELS["deepseek-coder:33b"]="Advanced coding, ~17GB"
+MODELS["exaone-deep:32b"]="🆕 LG large reasoning, ~19GB"
+MODELS["aya-expanse:32b"]="🆕 Cohere 23-lang large, ~20GB"
+MODELS["qwen3-vl:32b"]="🆕 Vision-language large, ~20GB"
 
 # Model order for display
 MODEL_ORDER=(
     # Small (3-8B)
-    "llama3.2:3b" "llama3.1:8b" "mistral:7b" "qwen2.5:7b" "qwen3:8b" "deepseek-r1:8b" "granite3-dense:8b" "dolphin3" "gemma3:4b" "nemotron-mini:4b" "ministral-3:3b" "phi3.5" "phi4-mini" "granite3.1-moe:3b"
+    "llama3.2:3b" "llama3.1:8b" "mistral:7b" "qwen2.5:7b" "qwen3:8b" "deepseek-r1:8b" "granite3-dense:8b" "dolphin3" "gemma3:4b" "nemotron-mini:4b" "ministral-3:3b" "phi3.5" "phi4-mini" "granite3.1-moe:3b" "smollm2:1.7b" "falcon3:7b" "marco-o1:7b" "hermes3:8b"
     # Medium (8-14B)
-    "ministral-3:8b" "phi3:14b" "phi4" "qwen2.5:14b" "qwen3:14b" "deepseek-r1:14b" "gemma3:12b" "qwen2.5-coder:14b" "ministral-3:14b" "codestral:22b"
+    "ministral-3:8b" "phi3:14b" "phi4" "qwen2.5:14b" "qwen3:14b" "deepseek-r1:14b" "gemma3:12b" "qwen2.5-coder:14b" "ministral-3:14b" "codestral:22b" "glm4:9b" "exaone-deep:7.8b" "falcon3:10b" "qwen3-vl:8b" "aya-expanse:8b" "olmo2:13b"
     # Large (24-34B)
-    "mistral-small:24b" "gemma2:27b" "gemma3:27b" "qwen3:30b-a3b" "qwen3-coder:30b" "nemotron-3-nano:30b" "qwen2.5:32b" "qwq:32b" "deepseek-r1:32b" "codellama:34b" "deepseek-coder:33b"
+    "mistral-small:24b" "gemma2:27b" "gemma3:27b" "qwen3:30b-a3b" "qwen3-coder:30b" "nemotron-3-nano:30b" "qwen2.5:32b" "qwq:32b" "deepseek-r1:32b" "codellama:34b" "deepseek-coder:33b" "exaone-deep:32b" "aya-expanse:32b" "qwen3-vl:32b"
 )
 
 # Show current status
@@ -78,7 +100,7 @@ MISSING_MODELS=()
 INSTALLED_COUNT=0
 
 # Get the list of installed models once
-INSTALLED_LIST=$(docker exec ollama ollama list 2>/dev/null || echo "")
+INSTALLED_LIST=$(docker exec "$OLLAMA_CONTAINER" ollama list 2>/dev/null || echo "")
 
 for model in "${MODEL_ORDER[@]}"; do
     desc="${MODELS[$model]}"
@@ -99,7 +121,7 @@ echo ""
 if [ ${#MISSING_MODELS[@]} -eq 0 ]; then
     echo "✅ All benchmark models are already installed!"
     echo ""
-    docker exec ollama ollama list
+    docker exec "$OLLAMA_CONTAINER" ollama list
     exit 0
 fi
 
@@ -128,7 +150,7 @@ for model in "${MISSING_MODELS[@]}"; do
     echo "   ${MODELS[$model]}"
     echo ""
     
-    if docker exec -it ollama ollama pull "$model"; then
+    if docker exec -it "$OLLAMA_CONTAINER" ollama pull "$model"; then
         echo "✅ Successfully downloaded $model"
         SUCCESS_MODELS+=("$model")
     else
@@ -158,7 +180,7 @@ fi
 
 echo ""
 echo "Current model inventory:"
-docker exec ollama ollama list
+docker exec "$OLLAMA_CONTAINER" ollama list
 
 echo ""
 echo "Storage usage:"

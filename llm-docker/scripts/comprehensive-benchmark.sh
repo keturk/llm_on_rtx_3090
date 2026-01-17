@@ -1,7 +1,7 @@
 #!/bin/bash
 # Comprehensive LLM Benchmark Suite for RTX 3090
-# Updated December 2025 - 35+ models including:
-# DeepSeek-R1, Qwen3, Gemma3, Nemotron 3, Mistral Small 3, Ministral 3, Phi-4, QwQ
+# Updated January 2026 - 48 models including:
+# DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse, OLMo2, Hermes3
 # Tests speed, VRAM usage, and quality metrics
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,6 +30,10 @@ MODELS=(
     "phi3.5"
     "phi4-mini"
     "granite3.1-moe:3b"
+    "smollm2:1.7b"
+    "falcon3:7b"
+    "marco-o1:7b"
+    "hermes3:8b"
 
     # === Medium Models (8-14B) - Balanced ===
     "ministral-3:8b"
@@ -42,6 +46,12 @@ MODELS=(
     "qwen2.5-coder:14b"
     "ministral-3:14b"
     "codestral:22b"
+    "glm4:9b"
+    "exaone-deep:7.8b"
+    "falcon3:10b"
+    "qwen3-vl:8b"
+    "aya-expanse:8b"
+    "olmo2:13b"
 
     # === Large Models (24-34B) - Quality ===
     "mistral-small:24b"
@@ -55,6 +65,9 @@ MODELS=(
     "deepseek-r1:32b"
     "codellama:34b"
     "deepseek-coder:33b"
+    "exaone-deep:32b"
+    "aya-expanse:32b"
+    "qwen3-vl:32b"
 )
 
 # Test prompts
@@ -65,10 +78,18 @@ PROMPTS["coding"]="Write a Python function to check if a string is a palindrome"
 PROMPTS["creative"]="Write a haiku about artificial intelligence"
 PROMPTS["math"]="What is 15% of 847? Show your work step by step"
 
+# Find the Ollama container name dynamically
+OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+if [ -z "$OLLAMA_CONTAINER" ]; then
+    echo "❌ Could not find Ollama container. Make sure it's running."
+    exit 1
+fi
+
 echo "=== LLM Comprehensive Benchmark Suite ===" | tee "$RESULTS_FILE"
 echo "Date: $(date)" | tee -a "$RESULTS_FILE"
 echo "System: Dell T5820 + RTX 3090 (24GB)" | tee -a "$RESULTS_FILE"
-echo "Models: Original + 2025 New (DeepSeek-R1, Qwen3, Gemma3)" | tee -a "$RESULTS_FILE"
+echo "Container: $OLLAMA_CONTAINER" | tee -a "$RESULTS_FILE"
+echo "Models: Original + 2025/2026 New (DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse)" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 
 # Check if GPU metrics logger is running
@@ -95,7 +116,7 @@ echo "" | tee -a "$RESULTS_FILE"
 
 AVAILABLE_MODELS=()
 for model in "${MODELS[@]}"; do
-    if docker exec ollama ollama list 2>/dev/null | grep -q "^${model}"; then
+    if docker exec "$OLLAMA_CONTAINER" ollama list 2>/dev/null | grep -q "^${model}"; then
         echo "✅ $model - installed" | tee -a "$RESULTS_FILE"
         AVAILABLE_MODELS+=("$model")
     else
@@ -137,7 +158,7 @@ benchmark_model() {
     echo "  Testing: $prompt_name..." >&2
     
     # Clear any loaded model first
-    docker exec ollama ollama stop "$model" 2>/dev/null || true
+    docker exec "$OLLAMA_CONTAINER" ollama stop "$model" 2>/dev/null || true
     sleep 2
     
     # Record start metrics
@@ -146,7 +167,7 @@ benchmark_model() {
     
     # Run inference and capture output
     local output
-    output=$(docker exec ollama ollama run "$model" "$prompt" 2>&1)
+    output=$(docker exec "$OLLAMA_CONTAINER" ollama run "$model" "$prompt" 2>&1)
     
     # Record end time
     local end_time=$(date +%s.%N)
@@ -187,11 +208,11 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     echo "--- MODEL_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
     
     # Pre-load model with a simple query
-    docker exec ollama ollama run "$model" "test" > /dev/null 2>&1
+    docker exec "$OLLAMA_CONTAINER" ollama run "$model" "test" > /dev/null 2>&1
     sleep 3
     
     # Get model size
-    model_size=$(docker exec ollama ollama list | grep "^${model}" | awk '{print $3}')
+    model_size=$(docker exec "$OLLAMA_CONTAINER" ollama list | grep "^${model}" | awk '{print $3}')
     
     # Run reasoning benchmark (primary metric)
     echo "--- INFERENCE_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
@@ -217,9 +238,12 @@ for model in "${AVAILABLE_MODELS[@]}"; do
         quality="Good"
     fi
     
-    # Mark new 2025 models
+    # Mark new 2025/2026 models
     model_display="$model"
-    if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]]; then
+    if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]] || \
+       [[ "$model" == glm4* ]] || [[ "$model" == exaone-deep* ]] || [[ "$model" == falcon3* ]] || \
+       [[ "$model" == aya-expanse* ]] || [[ "$model" == olmo2* ]] || [[ "$model" == hermes3* ]] || \
+       [[ "$model" == marco-o1* ]] || [[ "$model" == smollm2* ]]; then
         model_display="$model 🆕"
     fi
     
@@ -230,7 +254,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     
     # Unload model to free VRAM
     echo "  Unloading model..."
-    docker exec ollama ollama stop "$model" 2>/dev/null || true
+    docker exec "$OLLAMA_CONTAINER" ollama stop "$model" 2>/dev/null || true
     echo "--- MODEL_END: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
     sleep 3
 done
@@ -251,7 +275,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     echo "=== Detailed testing: $model ==="
     
     # Load model
-    docker exec ollama ollama run "$model" "test" > /dev/null 2>&1
+    docker exec "$OLLAMA_CONTAINER" ollama run "$model" "test" > /dev/null 2>&1
     sleep 2
     
     for prompt_name in "simple" "reasoning" "coding" "creative" "math"; do
@@ -267,7 +291,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     
     # Unload
     echo "  Unloading $model..."
-    docker exec ollama ollama stop "$model" 2>/dev/null || true
+    docker exec "$OLLAMA_CONTAINER" ollama stop "$model" 2>/dev/null || true
     sleep 3
 done
 
@@ -324,7 +348,10 @@ for model in "${AVAILABLE_MODELS[@]}"; do
         vram_gb=$(echo "scale=0; $vram / 1024" | bc)
         
         # Mark new models
-        if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]]; then
+        if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]] || \
+           [[ "$model" == glm4* ]] || [[ "$model" == exaone-deep* ]] || [[ "$model" == falcon3* ]] || \
+           [[ "$model" == aya-expanse* ]] || [[ "$model" == olmo2* ]] || [[ "$model" == hermes3* ]] || \
+           [[ "$model" == marco-o1* ]] || [[ "$model" == smollm2* ]]; then
             echo "| $model 🆕 | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
         else
             echo "| $model | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"

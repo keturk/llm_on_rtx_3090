@@ -77,13 +77,21 @@ else
 fi
 echo ""
 
+# Find the Ollama container name dynamically
+OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+if [ -z "$OLLAMA_CONTAINER" ]; then
+    echo -e "${RED}❌ Could not find Ollama container. Make sure it's running.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}📦 Using container: $OLLAMA_CONTAINER${NC}"
+
 # Step 2: Download benchmark models (if not skipped)
 if [ "$SKIP_PULL" = false ]; then
     echo -e "${YELLOW}[Step 2/5] Checking benchmark models...${NC}"
 
     # Check how many models are installed
-    INSTALLED_COUNT=$(docker exec ollama ollama list 2>/dev/null | grep -E "llama3|mistral|qwen|deepseek|gemma|phi|codellama|nemotron|ministral|qwq|granite|dolphin|codestral" | wc -l)
-    TOTAL_MODELS=34
+    INSTALLED_COUNT=$(docker exec "$OLLAMA_CONTAINER" ollama list 2>/dev/null | grep -E "llama3|mistral|qwen|deepseek|gemma|phi|codellama|nemotron|ministral|qwq|granite|dolphin|codestral|falcon|glm4|exaone|aya|olmo|hermes|marco|smollm" | wc -l)
+    TOTAL_MODELS=48
 
     echo "Installed models: $INSTALLED_COUNT/$TOTAL_MODELS"
 

@@ -56,8 +56,9 @@ for i in $(seq 1 $ITERATIONS); do
     
     case "$SERVICE" in
         ollama)
-            MODEL=$(docker exec ollama ollama list | tail -n +2 | head -n 1 | awk '{print $1}')
-            RESPONSE=$(docker exec ollama ollama run "$MODEL" "$PROMPT" 2>&1)
+            OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+            MODEL=$(docker exec "$OLLAMA_CONTAINER" ollama list | tail -n +2 | head -n 1 | awk '{print $1}')
+            RESPONSE=$(docker exec "$OLLAMA_CONTAINER" ollama run "$MODEL" "$PROMPT" 2>&1)
             ;;
         vllm)
             RESPONSE=$(curl -s http://localhost:8000/v1/completions \

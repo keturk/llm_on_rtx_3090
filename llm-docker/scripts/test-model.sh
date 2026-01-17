@@ -19,19 +19,26 @@ case "$SERVICE" in
         echo "🧪 Testing Ollama..."
         echo "Prompt: $PROMPT"
         echo ""
-        
-        # Get first available model
-        MODEL=$(docker exec ollama ollama list | tail -n +2 | head -n 1 | awk '{print $1}')
-        
-        if [ -z "$MODEL" ]; then
-            echo "❌ No models found. Pull a model first:"
-            echo "  docker exec -it ollama ollama pull llama3.2:3b"
+
+        # Find Ollama container dynamically
+        OLLAMA_CONTAINER=$(docker ps --format "{{.Names}}" | grep -i ollama | head -1)
+        if [ -z "$OLLAMA_CONTAINER" ]; then
+            echo "❌ Could not find Ollama container. Make sure it's running."
             exit 1
         fi
-        
+
+        # Get first available model
+        MODEL=$(docker exec "$OLLAMA_CONTAINER" ollama list | tail -n +2 | head -n 1 | awk '{print $1}')
+
+        if [ -z "$MODEL" ]; then
+            echo "❌ No models found. Pull a model first:"
+            echo "  docker exec -it $OLLAMA_CONTAINER ollama pull llama3.2:3b"
+            exit 1
+        fi
+
         echo "Using model: $MODEL"
         echo "---"
-        docker exec ollama ollama run "$MODEL" "$PROMPT"
+        docker exec "$OLLAMA_CONTAINER" ollama run "$MODEL" "$PROMPT"
         ;;
         
     vllm)
