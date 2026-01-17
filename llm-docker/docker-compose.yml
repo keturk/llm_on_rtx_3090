@@ -5,11 +5,12 @@ services:
     restart: unless-stopped
     runtime: nvidia
     ports:
-      - "11434:11434"
+      - "0.0.0.0:${OLLAMA_PORT:-11434}:11434"  # Bind to all interfaces
     volumes:
-      - /mnt/llm-models/ollama:/root/.ollama
-      - /mnt/llm-data/logs/ollama:/var/log/ollama
+      - ${OLLAMA_MODELS:-/mnt/llm-models/ollama}:/root/.ollama
+      - ${LOG_PATH:-/mnt/llm-data/logs}/ollama:/var/log/ollama
     environment:
+      - OLLAMA_HOST=0.0.0.0:11434  # Listen on all interfaces inside container
       - OLLAMA_DEBUG=1
       - CUDA_VISIBLE_DEVICES=0
       - NVIDIA_VISIBLE_DEVICES=all
