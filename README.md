@@ -9,7 +9,7 @@ Battle-tested guide for local LLM inference on Ubuntu 24.04 with NVIDIA GPU acce
 This repository provides a complete, production-ready setup for running large language models locally on consumer/workstation NVIDIA GPUs. No cloud costs, no API limits, full privacy.
 
 **Key achievements:**
-- ✅ **48 models tested** from 1.7B to 34B parameters
+- ✅ **59 models documented** from 1.7B to 35B parameters
 - ✅ Run 32B parameter models entirely on GPU (no CPU offloading)
 - ✅ Achieve 80-97% GPU utilization during inference
 - ✅ 17-90 tokens/second depending on model size
@@ -17,7 +17,7 @@ This repository provides a complete, production-ready setup for running large la
 - ✅ Docker-based deployment for reproducibility
 - ✅ Comprehensive benchmarking suite included
 
-**🆕 January 2026 Update:** Tested 48 models including DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, and Aya-Expanse!
+**🆕 July 2026 Update:** Added 11 new models including Gemma 4, GPT-OSS (OpenAI), Devstral, Mistral Small 3.1/3.2, Qwen 3.5/3.6!
 
 ---
 
@@ -120,7 +120,7 @@ nvidia-smi
 
 ## 📊 Performance Results
 
-Tested on RTX 3090 (24GB VRAM) - **48 models validated** (January 2026):
+Tested on RTX 3090 (24GB VRAM) - **59 models documented** (July 2026):
 
 ### Small Models (1.7-8B) — Fast Responses
 
@@ -144,7 +144,7 @@ Tested on RTX 3090 (24GB VRAM) - **48 models validated** (January 2026):
 | glm4:9b 🆕 | ~5GB | 31.4 | Chinese-English |
 | gemma3:4b 🆕 | ~4GB | 27.7 | Multimodal compact |
 
-### Medium Models (12-14B) — Balanced
+### Medium Models (12-20B) — Balanced
 
 | Model | VRAM | Tokens/sec | Best For |
 |-------|------|------------|----------|
@@ -156,10 +156,10 @@ Tested on RTX 3090 (24GB VRAM) - **48 models validated** (January 2026):
 | olmo2:13b 🆕 | ~11GB | 33.9 | Open research |
 | qwen2.5-coder:14b | ~9GB | 29.2 | Coding specialist |
 | qwen2.5:14b | ~9GB | 29.2 | Production use |
-| ministral-3:14b | ~10GB | 23.1 | Mistral medium |
-| gemma3:12b 🆕 | ~9GB | 22.0 | Multimodal balanced |
+| gemma4:12b 🆕🆕 | ~7GB | TBD | Google's latest, tool calling |
+| gpt-oss:20b 🆕🆕 | ~14GB | TBD | OpenAI MoE, best tool calling |
 
-### Large Models (22-34B) — Maximum Quality
+### Large Models (22-35B) — Maximum Quality
 
 | Model | VRAM | Tokens/sec | Best For |
 |-------|------|------------|----------|
@@ -167,62 +167,96 @@ Tested on RTX 3090 (24GB VRAM) - **48 models validated** (January 2026):
 | codestral:22b | ~13GB | 35.4 | Code specialist |
 | nemotron-3-nano:30b | ~23GB | 33.5 | Large efficient |
 | exaone-deep:32b 🆕 | ~19GB | 33.3 | Reasoning 32B |
-| qwq:32b | ~19GB | 30.2 | Deep reasoning |
 | deepseek-r1:32b 🆕 | ~19GB | 29.8 | Max reasoning quality |
-| qwen3-coder:30b 🆕 | ~18GB | 24.3 | Advanced coding |
-| codellama:34b | ~19GB | 23.9 | Code generation |
-| qwen3-vl:32b 🆕 | ~23GB | 22.1 | Vision + text large |
+| devstral:24b 🆕🆕 | ~14GB | TBD | SWE-Bench coding champion |
+| devstral-small-2:24b 🆕🆕 | ~15GB | TBD | Coding agent, 384K ctx |
+| mistral-small3.1:24b 🆕🆕 | ~15GB | TBD | 128K multimodal |
+| mistral-small3.2:24b 🆕🆕 | ~15GB | TBD | Function calling |
+| gemma4:26b 🆕🆕 | ~18GB | TBD | Google MoE, 4B active |
+| gemma4:31b 🆕🆕 | ~20GB | TBD | Google's best dense |
+| qwen3.5:27b 🆕🆕 | ~17GB | TBD | Alibaba Feb 2026 |
+| qwen3.6:27b 🆕🆕 | ~17GB | TBD | Latest Qwen, 256K ctx |
+| qwen3.6:35b 🆕🆕 | ~24GB | TBD | Latest Qwen MoE |
 | qwen2.5:32b | ~19GB | 21.4 | Max general quality |
 | deepseek-coder:33b | ~18GB | 21.5 | Elite coding |
-| aya-expanse:32b 🆕 | ~20GB | 20.9 | Multilingual large |
-| gemma2:27b | ~17GB | 20.4 | Google's best |
 | gemma3:27b 🆕 | ~17GB | 18.0 | Multimodal large |
 
-🆕 = New in 2025/2026 update
+🆕 = New in 2025 update | 🆕🆕 = New in July 2026 update
 
 📈 **[Full Model Guide & Benchmarks →](docs/Models_And_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
 
 ---
 
-## 🆕 2025/2026 Model Highlights
+## 🆕🆕 July 2026 Model Highlights
+
+### Gemma 4 (Google's Latest)
+Google's flagship models with built-in tool calling, vision, and frontier-level reasoning. Available in 12B (compact), 26B MoE (4B active), and 31B dense variants.
+
+```bash
+docker exec -it ollama ollama run gemma4:12b "Write a function that validates JSON schema"
+docker exec -it ollama ollama run gemma4:31b "Explain the trade-offs between microservices and monoliths"
+```
+
+### GPT-OSS (OpenAI's First Open Model)
+OpenAI's first open-weight model under Apache 2.0. MoE architecture (21B total, 3.6B active) runs on just 14GB VRAM. Cleanest tool-call JSON of any open model, rivals o3-mini on benchmarks.
+
+```bash
+docker exec -it ollama ollama run gpt-oss:20b "Call the weather API for San Francisco and format the response"
+```
+
+### Devstral (Mistral Coding Agent)
+Mistral x All Hands AI collaboration. SWE-Bench Verified champion at 46.8%. Devstral Small 2 adds 384K context for massive codebases.
+
+```bash
+docker exec -it ollama ollama run devstral:24b "Review this code and suggest improvements"
+docker exec -it ollama ollama run devstral-small-2:24b "Analyze this repository structure"
+```
+
+### Qwen 3.5/3.6 (Alibaba's Latest)
+Qwen 3.6 (April 2026) is the best overall pick for 24GB GPUs per community consensus. 256K context, improved coding, and stable responsive experience.
+
+```bash
+docker exec -it ollama ollama run qwen3.6:27b "Write a Python async web scraper with error handling"
+```
+
+### Mistral Small 3.1/3.2 (Updated Mistral)
+Updated Mistral Small with multimodal support and improved function calling. 3.2 adds better instruction following and less repetition.
+
+```bash
+docker exec -it ollama ollama run mistral-small3.2:24b "Describe this architecture diagram"
+```
+
+---
+
+## 🆕 2025 Model Highlights
 
 ### DeepSeek-R1 (Reasoning Models)
 Chain-of-thought reasoning models that show their "thinking" process. Performance approaches OpenAI's O1 on many benchmarks. The 14B model achieves 56.6 tok/s — fastest in its quality class.
 
 ```bash
 docker exec -it ollama ollama run deepseek-r1:14b "Solve: If 3x + 7 = 22, what is x?"
-# Shows: Thinking... [step-by-step reasoning] ...done thinking.
 ```
 
 ### Qwen3 (Next-Gen Qwen)
-Major upgrade from Qwen2.5. The 14B runs at 43.2 tok/s vs Qwen2.5:14B at 29.2 tok/s — 48% faster! The 30B MoE model only activates 3B parameters per token, achieving 43.7 tok/s. Includes vision models (qwen3-vl) and coding specialists.
+Major upgrade from Qwen2.5. The 14B runs at 43.2 tok/s vs Qwen2.5:14B at 29.2 tok/s — 48% faster! The 30B MoE model only activates 3B parameters per token, achieving 43.7 tok/s.
 
 ```bash
 docker exec -it ollama ollama run qwen3:14b "Write a Python async web scraper"
-docker exec -it ollama ollama run qwen3-vl:8b "Describe this image"
 ```
 
 ### EXAONE-Deep (Speed Champion)
-LG's reasoning model with exceptional speed. The 7.8B achieves 90.1 tok/s — fastest in the entire benchmark! The 32B version maintains 33.3 tok/s with deep reasoning capabilities.
+LG's reasoning model with exceptional speed. The 7.8B achieves 90.1 tok/s — fastest in the entire benchmark!
 
 ```bash
 docker exec -it ollama ollama run exaone-deep:7.8b "Explain quantum entanglement"
 ```
 
-### Gemma3 (Multimodal)
-Google's latest with text + image understanding and 128K context window. The 12B model uses ~9GB VRAM vs Gemma2:27B at ~17GB — similar quality at much lower resource usage.
-
-```bash
-docker exec -it ollama ollama run gemma3:12b "Describe the key features of transformer architecture"
-```
-
-### Other Notable Models
-- **GLM4** (9B): Bilingual Chinese-English model at 31.4 tok/s
-- **Falcon3** (7B/10B): TII's open alternative, solid performance
+### Other 2025 Models
+- **Gemma3** (4B/12B/27B): Google's multimodal with 128K context
+- **GLM4** (9B): Bilingual Chinese-English at 31.4 tok/s
+- **Falcon3** (7B/10B): TII's open alternative
 - **Aya-Expanse** (8B/32B): Cohere's multilingual models
 - **Marco-O1** (7B): Reasoning specialist at 68.9 tok/s
-- **SmolLM2** (1.7B): Smallest model with 64.6 tok/s
-- **OLMo2** (13B): AI2's fully open research model
 
 ---
 
@@ -318,10 +352,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Model Providers:**
 - [Meta AI](https://ai.meta.com/) - Llama 3.1, Llama 3.2, Code Llama
-- [Alibaba Cloud](https://www.alibabacloud.com/en/solutions/generative-ai/qwen) - Qwen 2.5, Qwen 3, Qwen3-VL series
-- [Mistral AI](https://mistral.ai/) - Mistral 7B, Ministral-3, Codestral
+- [Alibaba Cloud](https://www.alibabacloud.com/en/solutions/generative-ai/qwen) - Qwen 2.5, Qwen 3, Qwen 3.5, Qwen 3.6, Qwen3-VL series
+- [Mistral AI](https://mistral.ai/) - Mistral 7B, Ministral-3, Codestral, Mistral Small 3.1/3.2, Devstral
 - [Microsoft](https://azure.microsoft.com/en-us/products/phi-3) - Phi-3, Phi-4 series
-- [Google DeepMind](https://deepmind.google/technologies/gemma/) - Gemma 2, Gemma 3
+- [Google DeepMind](https://deepmind.google/technologies/gemma/) - Gemma 2, Gemma 3, Gemma 4
+- [OpenAI](https://openai.com/) - GPT-OSS
 - [DeepSeek](https://www.deepseek.com/) - DeepSeek Coder, DeepSeek-R1
 - [LG AI Research](https://www.lgresearch.ai/) - EXAONE-Deep
 - [TII UAE](https://www.tii.ae/) - Falcon3
@@ -329,6 +364,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Zhipu AI](https://www.zhipuai.cn/) - GLM4
 - [HuggingFace](https://huggingface.co/) - SmolLM2
 - [Allen Institute for AI](https://allenai.org/) - OLMo2
+- [All Hands AI](https://www.all-hands.dev/) - Devstral (with Mistral AI)
 
 ---
 

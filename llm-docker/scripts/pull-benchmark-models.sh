@@ -1,9 +1,10 @@
 #!/bin/bash
 # Download all benchmark models for comprehensive testing
-# RTX 3090 24GB - Updated January 2026
-# Includes: 45+ models - DeepSeek-R1, Qwen3, Gemma3, Qwen3-VL, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse, OLMo2, Hermes3
+# RTX 3090 24GB - Updated July 2026
+# Includes: 60 models - Gemma4, GPT-OSS, Qwen3.5/3.6, Devstral, Mistral Small 3.1/3.2,
+#           DeepSeek-R1, Qwen3, Gemma3, Qwen3-VL, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse, OLMo2, Hermes3
 
-echo "=== Downloading Benchmark Models for RTX 3090 (2026 Edition) ==="
+echo "=== Downloading Benchmark Models for RTX 3090 (July 2026 Edition) ==="
 echo "All models selected to run entirely on 24GB VRAM"
 echo ""
 
@@ -68,20 +69,33 @@ MODELS["aya-expanse:8b"]="🆕 Cohere 23-lang model, ~5GB"
 MODELS["olmo2:13b"]="🆕 AI2 open research, ~8GB"
 
 # Large models (24-34B) - Maximum quality
-MODELS["mistral-small:24b"]="🆕 Best sub-70B, ~14GB"
+MODELS["mistral-small:24b"]="Best sub-70B, ~14GB"
 MODELS["gemma2:27b"]="Google high-quality, ~15GB"
-MODELS["gemma3:27b"]="🆕 Multimodal large, ~17GB"
-MODELS["qwen3:30b-a3b"]="🆕 MoE fast inference, ~18GB"
-MODELS["qwen3-coder:30b"]="🆕 Qwen3 coding MoE 256K, ~19GB"
-MODELS["nemotron-3-nano:30b"]="🆕 Agentic MoE 1M context, ~24GB"
+MODELS["gemma3:27b"]="Multimodal large, ~17GB"
+MODELS["qwen3:30b-a3b"]="MoE fast inference, ~18GB"
+MODELS["qwen3-coder:30b"]="Qwen3 coding MoE 256K, ~19GB"
+MODELS["nemotron-3-nano:30b"]="Agentic MoE 1M context, ~24GB"
 MODELS["qwen2.5:32b"]="Maximum general quality, ~21GB"
-MODELS["qwq:32b"]="🆕 Qwen reasoning specialist, ~20GB"
-MODELS["deepseek-r1:32b"]="🆕 Best reasoning quality, ~19GB"
+MODELS["qwq:32b"]="Qwen reasoning specialist, ~20GB"
+MODELS["deepseek-r1:32b"]="Best reasoning quality, ~19GB"
 MODELS["codellama:34b"]="Meta code specialist, ~18GB"
 MODELS["deepseek-coder:33b"]="Advanced coding, ~17GB"
-MODELS["exaone-deep:32b"]="🆕 LG large reasoning, ~19GB"
-MODELS["aya-expanse:32b"]="🆕 Cohere 23-lang large, ~20GB"
-MODELS["qwen3-vl:32b"]="🆕 Vision-language large, ~20GB"
+MODELS["exaone-deep:32b"]="LG large reasoning, ~19GB"
+MODELS["aya-expanse:32b"]="Cohere 23-lang large, ~20GB"
+MODELS["qwen3-vl:32b"]="Vision-language large, ~20GB"
+
+# New July 2026 models
+MODELS["gemma4:12b"]="🆕 Google latest multimodal, ~8GB"
+MODELS["gpt-oss:20b"]="🆕 OpenAI MoE 3.6B active, ~14GB"
+MODELS["gemma4:26b"]="🆕 Google MoE 4B active, ~18GB"
+MODELS["gemma4:31b"]="🆕 Google dense 31B, ~20GB"
+MODELS["mistral-small3.1:24b"]="🆕 Updated Mistral 128K multimodal, ~15GB"
+MODELS["mistral-small3.2:24b"]="🆕 Latest Mistral function calling, ~15GB"
+MODELS["devstral:24b"]="🆕 Mistral coding 128K, ~14GB"
+MODELS["devstral-small-2:24b"]="🆕 Coding agent 384K, ~15GB"
+MODELS["qwen3.5:27b"]="🆕 Alibaba Feb 2026 multimodal, ~17GB"
+MODELS["qwen3.6:27b"]="🆕 Alibaba Apr 2026 256K, ~17GB"
+MODELS["qwen3.6:35b"]="🆕 Latest Qwen MoE 3B active, ~24GB"
 
 # Model order for display
 MODEL_ORDER=(
@@ -91,6 +105,8 @@ MODEL_ORDER=(
     "ministral-3:8b" "phi3:14b" "phi4" "qwen2.5:14b" "qwen3:14b" "deepseek-r1:14b" "gemma3:12b" "qwen2.5-coder:14b" "ministral-3:14b" "codestral:22b" "glm4:9b" "exaone-deep:7.8b" "falcon3:10b" "qwen3-vl:8b" "aya-expanse:8b" "olmo2:13b"
     # Large (24-34B)
     "mistral-small:24b" "gemma2:27b" "gemma3:27b" "qwen3:30b-a3b" "qwen3-coder:30b" "nemotron-3-nano:30b" "qwen2.5:32b" "qwq:32b" "deepseek-r1:32b" "codellama:34b" "deepseek-coder:33b" "exaone-deep:32b" "aya-expanse:32b" "qwen3-vl:32b"
+    # New July 2026
+    "gemma4:12b" "gpt-oss:20b" "gemma4:26b" "gemma4:31b" "mistral-small3.1:24b" "mistral-small3.2:24b" "devstral:24b" "devstral-small-2:24b" "qwen3.5:27b" "qwen3.6:27b" "qwen3.6:35b"
 )
 
 # Show current status

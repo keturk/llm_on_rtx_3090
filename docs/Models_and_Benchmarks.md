@@ -4,8 +4,8 @@
 
 Complete guide to LLM selection, performance benchmarks, and recommendations for NVIDIA RTX 3090. This document contains detailed technical analysis, benchmark data, and comprehensive model descriptions.
 
-**Last Updated:** January 2026
-**Models Tested:** 48 total (1.7B to 34B parameters)
+**Last Updated:** July 2026
+**Models Documented:** 59 total (1.7B to 35B parameters)
 **Methodology:** Automated comprehensive benchmark suite with 5 diverse prompts per model
 
 ---
@@ -44,14 +44,15 @@ OS:      Ubuntu 24.04.3 LTS
 
 | Use Case | Speed Priority | Balanced | Quality Priority |
 |----------|---------------|----------|------------------|
-| **Chat/Q&A** | llama3.2:3b | llama3.1:8b | qwen2.5:32b |
-| **Coding** | qwen2.5:7b | qwen2.5-coder:14b | deepseek-coder:33b |
-| **Long Context** | phi3:14b | phi3:14b | qwen2.5:32b |
-| **Creative Writing** | mistral:7b | gemma2:27b | qwen2.5:32b |
-| **Reasoning** | deepseek-r1:8b | deepseek-r1:14b | deepseek-r1:32b |
-| **Agentic/RAG** | nemotron-mini:4b | nemotron-3-nano:30b | nemotron-3-nano:30b |
+| **Chat/Q&A** | llama3.2:3b | llama3.1:8b | qwen3.6:27b |
+| **Coding** | qwen2.5:7b | devstral:24b | qwen3.6:27b |
+| **Long Context** | phi3:14b | mistral-small3.1:24b | qwen3.6:27b (256K) |
+| **Creative Writing** | mistral:7b | gemma3:27b | gemma4:31b |
+| **Reasoning** | deepseek-r1:8b | deepseek-r1:14b | gemma4:31b |
+| **Agentic/RAG** | gpt-oss:20b | devstral-small-2:24b | nemotron-3-nano:30b |
+| **Tool Calling** | gpt-oss:20b | mistral-small3.2:24b | gemma4:26b |
 
-### Performance Overview (January 2026 - 48 Models Tested)
+### Performance Overview (July 2026 - 59 Models)
 
 | Model | Size | VRAM | Tokens/sec | Quality | Best For |
 |-------|------|------|------------|---------|----------|
@@ -78,7 +79,9 @@ OS:      Ubuntu 24.04.3 LTS
 | glm4:9b 🆕 | 9B | ~5GB | 31.4 | Good | Chinese-English |
 | ministral-3:8b | 8B | ~7GB | 30.8 | Very Good | Agentic, vision |
 | gemma3:4b 🆕 | 4B | ~4GB | 27.7 | Good | Multimodal compact |
-| **Medium Models (10-14B) - Balanced** |
+| **Medium Models (10-20B) - Balanced** |
+| gemma4:12b 🆕🆕 | 12B | ~7GB | TBD | Excellent | Google's latest, multimodal, tool calling |
+| gpt-oss:20b 🆕🆕 | 20B MoE | ~14GB | TBD | Excellent | OpenAI's first open model, best tool calling |
 | deepseek-r1:14b 🆕 | 14B | ~9GB | 56.6 | Excellent | Best reasoning value |
 | qwen3:14b 🆕 | 14B | ~9GB | 43.2 | Excellent | Enhanced quality |
 | phi3:14b | 14B | ~9GB | 38.7 | Excellent | Long context (128k) |
@@ -105,6 +108,15 @@ OS:      Ubuntu 24.04.3 LTS
 | aya-expanse:32b 🆕 | 32B | ~20GB | 20.9 | Best | Multilingual large |
 | gemma2:27b | 27B | ~17GB | 20.4 | Excellent+ | Google's best |
 | gemma3:27b 🆕 | 27B | ~17GB | 18.0 | Excellent+ | Multimodal large |
+| gemma4:26b 🆕🆕 | 26B MoE | ~18GB | TBD | Excellent+ | Google MoE, 4B active, reasoning |
+| gemma4:31b 🆕🆕 | 31B | ~20GB | TBD | Best | Google's best dense model |
+| mistral-small3.1:24b 🆕🆕 | 24B | ~15GB | TBD | Excellent+ | 128K context, multimodal |
+| mistral-small3.2:24b 🆕🆕 | 24B | ~15GB | TBD | Excellent+ | Latest Mistral, function calling |
+| devstral:24b 🆕🆕 | 24B | ~14GB | TBD | Excellent+ | Mistral coding, SWE-Bench champion |
+| devstral-small-2:24b 🆕🆕 | 24B | ~15GB | TBD | Excellent+ | Coding agent, 384K context |
+| qwen3.5:27b 🆕🆕 | 27B | ~17GB | TBD | Best | Alibaba Feb 2026, multimodal |
+| qwen3.6:27b 🆕🆕 | 27B | ~17GB | TBD | Best | Alibaba Apr 2026, 256K context |
+| qwen3.6:35b 🆕🆕 | 35B MoE | ~24GB | TBD | Best | Latest Qwen MoE, 3B active |
 
 ---
 
@@ -170,7 +182,15 @@ OS:      Ubuntu 24.04.3 LTS
 - **Features:** Vision support, function calling, JSON output
 - **Languages:** Multilingual (English, French, Spanish, German, etc.)
 
-### Medium Models (12-14B) - Balanced
+#### 🆕🆕 gemma4:12b (2026)
+- **VRAM:** ~7GB | **Speed:** TBD | **Quality:** Excellent
+- **Best for:** Multimodal tasks, reasoning, tool calling, agentic workflows
+- **Trade-offs:** Google's latest model with built-in vision and tool use
+- **Ollama:** `gemma4:12b`
+- **Context:** 128K-256K tokens
+- **Features:** Vision, tool calling, reasoning, multimodal
+
+### Medium Models (12-20B) - Balanced
 
 #### phi3:14b
 - **VRAM:** ~8GB | **Speed:** 30-40 tok/s | **Quality:** Excellent
@@ -220,6 +240,15 @@ OS:      Ubuntu 24.04.3 LTS
 - **Ollama:** `ministral-3:8b`
 - **Features:** Vision support, function calling, multilingual
 
+#### 🆕🆕 gpt-oss:20b (2026)
+- **VRAM:** ~14GB | **Speed:** TBD | **Quality:** Excellent
+- **Best for:** Tool calling, agentic tasks, reasoning, structured output
+- **Trade-offs:** OpenAI's first open-weight model, MoE with only 3.6B active params
+- **Ollama:** `gpt-oss:20b`
+- **Context:** 128K tokens
+- **Features:** Apache 2.0, function calling, web browsing, structured output
+- **Architecture:** 21B total parameters, 3.6B active (MoE), MXFP4 quantization
+
 #### 🆕 ministral-3:14b (2025)
 - **VRAM:** ~9GB | **Speed:** 30-40 tok/s | **Quality:** Excellent
 - **Best for:** Advanced agentic AI, vision analysis
@@ -227,7 +256,7 @@ OS:      Ubuntu 24.04.3 LTS
 - **Ollama:** `ministral-3:14b`
 - **Features:** Vision support, function calling, JSON output
 
-### Large Models (24-34B) - Maximum Quality
+### Large Models (24-35B) - Maximum Quality
 
 #### 🆕 mistral-small:24b (2025)
 - **VRAM:** ~14GB (Q4) | **Speed:** 25-35 tok/s | **Quality:** Excellent+
@@ -293,6 +322,78 @@ OS:      Ubuntu 24.04.3 LTS
 - **Best for:** Complex algorithms, code review
 - **Ollama:** `deepseek-coder:33b` | **HF:** `deepseek-ai/deepseek-coder-33b-instruct`
 
+#### 🆕🆕 gemma4:26b (2026)
+- **VRAM:** ~18GB (MoE Q4) | **Speed:** TBD | **Quality:** Excellent+
+- **Best for:** Reasoning, agentic workflows, coding, multimodal
+- **Trade-offs:** MoE with 4B active params, excellent speed-to-quality ratio
+- **Ollama:** `gemma4:26b`
+- **Context:** 128K-256K tokens
+- **Features:** Vision, tool calling, MoE architecture
+- **Architecture:** 26B total, 4B active per token
+
+#### 🆕🆕 gemma4:31b (2026)
+- **VRAM:** ~20GB (Q4) | **Speed:** TBD | **Quality:** Best
+- **Best for:** Maximum quality Google model, reasoning, coding
+- **Trade-offs:** Dense 31B model, strong reasoning capabilities
+- **Ollama:** `gemma4:31b`
+- **Context:** 128K-256K tokens
+- **Features:** Vision, tool calling, dense architecture
+
+#### 🆕🆕 mistral-small3.1:24b (2026)
+- **VRAM:** ~15GB (Q4) | **Speed:** TBD | **Quality:** Excellent+
+- **Best for:** Long context (128K), multimodal, general use
+- **Trade-offs:** Updated Mistral Small with improved text and vision
+- **Ollama:** `mistral-small3.1:24b`
+- **Context:** 128K tokens
+- **Features:** Apache 2.0, multimodal (text + image), multilingual
+
+#### 🆕🆕 mistral-small3.2:24b (2026)
+- **VRAM:** ~15GB (Q4) | **Speed:** TBD | **Quality:** Excellent+
+- **Best for:** Function calling, structured output, agents
+- **Trade-offs:** Latest Mistral Small with improved tool use
+- **Ollama:** `mistral-small3.2:24b`
+- **Context:** 128K tokens
+- **Features:** Enhanced function calling, less repetition, multimodal
+
+#### 🆕🆕 devstral:24b (2026)
+- **VRAM:** ~14GB (Q4) | **Speed:** TBD | **Quality:** Excellent+
+- **Best for:** Software engineering, code generation, debugging
+- **Trade-offs:** SWE-Bench champion (46.8%), Mistral x All Hands AI
+- **Ollama:** `devstral:24b`
+- **Context:** 128K tokens
+- **Features:** Apache 2.0, agentic coding, codebase exploration
+
+#### 🆕🆕 devstral-small-2:24b (2026)
+- **VRAM:** ~15GB (Q4) | **Speed:** TBD | **Quality:** Excellent+
+- **Best for:** Coding agents, multi-file editing, codebase exploration
+- **Trade-offs:** Updated version with 384K context, enhanced tool use
+- **Ollama:** `devstral-small-2:24b`
+- **Context:** 384K tokens
+- **Features:** Apache 2.0, agentic coding, tool calling
+
+#### 🆕🆕 qwen3.5:27b (2026)
+- **VRAM:** ~17GB (Q4) | **Speed:** TBD | **Quality:** Best
+- **Best for:** General quality, multimodal, reasoning
+- **Trade-offs:** Alibaba's Feb 2026 release, successor to Qwen3
+- **Ollama:** `qwen3.5:27b`
+- **Features:** Multimodal learning, architectural efficiency improvements
+
+#### 🆕🆕 qwen3.6:27b (2026)
+- **VRAM:** ~17GB (Q4) | **Speed:** TBD | **Quality:** Best
+- **Best for:** Coding, general quality, long context
+- **Trade-offs:** Alibaba's Apr 2026 release, flagship dense model
+- **Ollama:** `qwen3.6:27b`
+- **Context:** 256K tokens
+- **Features:** Improved coding, stability, responsiveness
+
+#### 🆕🆕 qwen3.6:35b (2026)
+- **VRAM:** ~24GB (MoE Q4) | **Speed:** TBD | **Quality:** Best
+- **Best for:** Maximum Qwen quality, coding, reasoning
+- **Trade-offs:** MoE with 3B active params, tight fit on 24GB
+- **Ollama:** `qwen3.6:35b`
+- **Context:** 256K tokens
+- **Architecture:** 35B total, 3B active per token (MoE)
+
 ### Very Large Models (70B+) - Advanced Reasoning
 
 > **Note:** These models are too large for RTX 3090 24GB in Q4 quantization. They require Q2 quantization (significant quality loss) or multiple GPUs.
@@ -324,27 +425,31 @@ OS:      Ubuntu 24.04.3 LTS
 1st choice: mistral:7b (fast, good quality)
 2nd choice: llama3.2:3b (fastest, acceptable quality)
 3rd choice: llama3.1:8b (balanced)
+Quality focus: qwen3.6:27b (latest Qwen, 256K context)
 ```
 
 ### Coding Assistance
 ```
 Quick edits: qwen2.5:7b (fast, good code)
 Balanced: qwen2.5-coder:14b (good speed, excellent code)
+Agentic coding: devstral:24b or devstral-small-2:24b (SWE-Bench champion)
 Complex code: deepseek-coder:33b or codellama:34b (best quality)
+Latest: qwen3.6:27b (improved coding experience)
 ```
 
 ### Document Analysis
 ```
 Short docs: llama3.1:8b (fast, reliable)
-Long docs: phi3:14b (128k context support)
-Quality focus: qwen2.5:32b (best reasoning)
+Long docs: phi3:14b (128k), mistral-small3.1:24b (128K multimodal)
+Very long docs: devstral-small-2:24b (384K context)
+Quality focus: qwen3.6:27b (256K context, best quality)
 ```
 
 ### Creative Writing
 ```
 Speed priority: mistral:7b
 Balanced: gemma2:27b or gemma3:27b
-Quality priority: qwen2.5:32b
+Quality priority: qwen3.6:27b or gemma4:31b
 ```
 
 ### Reasoning Tasks
@@ -352,7 +457,7 @@ Quality priority: qwen2.5:32b
 Fast reasoning: deepseek-r1:8b
 Best value: deepseek-r1:14b
 Advanced reasoning: qwq:32b (Qwen reasoning specialist)
-Maximum quality: deepseek-r1:32b
+Maximum quality: deepseek-r1:32b or gemma4:31b
 ```
 
 ### Agentic AI & RAG
@@ -361,13 +466,22 @@ Compact: nemotron-mini:4b (function calling, RAG optimized)
 Edge deployment: ministral-3:8b (vision, multilingual, agentic)
 High performance: nemotron-3-nano:30b (1M context, hybrid MoE)
 Advanced vision: ministral-3:14b (vision + function calling)
+Best tool calling: gpt-oss:20b (cleanest JSON output)
 ```
 
 ### Function Calling & Structured Output
 ```
-Lightweight: nemotron-mini:4b
-Balanced: ministral-3:8b (with vision)
-Advanced: ministral-3:14b (JSON output, vision)
+Lightweight: gpt-oss:20b (OpenAI MoE, only 3.6B active, best JSON)
+Balanced: mistral-small3.2:24b (improved function calling)
+Advanced: gemma4:12b (built-in tool calling)
+```
+
+### Software Engineering Agents
+```
+Lightweight: gpt-oss:20b (tool use, structured output)
+Balanced: devstral:24b (SWE-Bench 46.8%, 128K context)
+Advanced: devstral-small-2:24b (384K context, multi-file editing)
+Maximum quality: qwen3.6:27b (stable coding experience)
 ```
 
 ---
@@ -403,6 +517,14 @@ Test new model releases:
 1. `qwen3:8b`, `qwen3:14b`, `qwen3:30b-a3b`
 2. `deepseek-r1:8b`, `deepseek-r1:14b`, `deepseek-r1:32b`
 3. `gemma3:4b`, `gemma3:12b`, `gemma3:27b`
+
+### Phase 6: 2026 Models
+Test latest model releases:
+1. `gemma4:12b`, `gemma4:26b`, `gemma4:31b`
+2. `gpt-oss:20b`
+3. `devstral:24b`, `devstral-small-2:24b`
+4. `mistral-small3.1:24b`, `mistral-small3.2:24b`
+5. `qwen3.5:27b`, `qwen3.6:27b`, `qwen3.6:35b`
 
 ---
 
@@ -510,7 +632,7 @@ OS:      Ubuntu 24.04.3 LTS
 
 ---
 
-## Key Findings (January 2026 - 48 Models)
+## Key Findings (July 2026 - 59 Models)
 
 ### Performance Highlights
 
@@ -562,6 +684,15 @@ OS:      Ubuntu 24.04.3 LTS
    - **Ministral 3** - Edge-optimized with vision capabilities
    - **Phi-4** - Microsoft's latest reasoning champion
    - **QwQ** - Qwen's dedicated reasoning model
+
+8. **2026 Highlights:**
+   - **Gemma 4** - Google's latest with built-in tool calling and vision (12B, 26B MoE, 31B)
+   - **GPT-OSS** - OpenAI's first open-weight model, MoE 20B (3.6B active), Apache 2.0
+   - **Devstral** - Mistral's coding agent model, SWE-Bench champion (46.8%)
+   - **Devstral Small 2** - Updated coding agent with 384K context
+   - **Mistral Small 3.1/3.2** - Updated Mistral with multimodal and improved function calling
+   - **Qwen 3.5** - Feb 2026 release with multimodal improvements
+   - **Qwen 3.6** - Apr 2026 release, best coding experience, 256K context
 
 ---
 
@@ -617,6 +748,63 @@ Latest from Microsoft:
   - Too large for RTX 3090 (requires Q2 or multi-GPU)
   - 43GB Q4, 24GB Q2
 
+### 🆕🆕 Gemma4 Series (2026 - Google's Latest)
+Google's flagship models with built-in tool calling, vision, and reasoning:
+- **gemma4:12b** - Compact multimodal with tool calling (~7GB VRAM)
+  - Best small model for agentic workflows
+  - Q4_K_M quantization, 128K-256K context
+- **gemma4:26b** - MoE model (26B total, 4B active per token, ~18GB VRAM)
+  - Excellent speed-to-quality ratio
+  - Reasoning, coding, agentic workflows
+- **gemma4:31b** - Dense model (~20GB VRAM)
+  - Google's best quality model for RTX 3090
+  - Frontier-level reasoning and coding
+
+### 🆕🆕 GPT-OSS (2026 - OpenAI's First Open Model)
+OpenAI's first open-weight models:
+- **gpt-oss:20b** - MoE (21B total, 3.6B active, ~14GB VRAM)
+  - Apache 2.0 license
+  - Cleanest tool-call JSON of any open model
+  - Native function calling, web browsing, structured output
+  - Rivals OpenAI o3-mini on common benchmarks
+  - Runs on just 16GB VRAM
+
+### 🆕🆕 Devstral Series (2026 - Mistral Coding Agents)
+Mistral AI x All Hands AI collaboration for software engineering:
+- **devstral:24b** - Coding specialist (~14GB VRAM)
+  - 46.8% on SWE-Bench Verified (SOTA for open models)
+  - 128K context, Apache 2.0 license
+  - Agentic coding, codebase exploration
+- **devstral-small-2:24b** - Updated coding agent (~15GB VRAM)
+  - 384K context window
+  - Multi-file editing, enhanced tool use
+  - Excels at codebase exploration and editing
+
+### 🆕🆕 Mistral Small Updates (2026)
+Updated Mistral Small series:
+- **mistral-small3.1:24b** - Improved text and multimodal (~15GB VRAM)
+  - 128K context, Apache 2.0
+  - Text + image understanding
+- **mistral-small3.2:24b** - Latest update (~15GB VRAM)
+  - Improved function calling and instruction following
+  - Less repetition errors
+  - 128K context, multimodal
+
+### 🆕🆕 Qwen3.5/3.6 Series (2026 - Alibaba's Latest)
+Major upgrades to the Qwen family:
+- **qwen3.5:27b** - Feb 2026 release (~17GB VRAM)
+  - Multimodal learning improvements
+  - Architectural efficiency gains
+  - Reinforcement learning scale improvements
+- **qwen3.6:27b** - Apr 2026 dense flagship (~17GB VRAM)
+  - 256K context window
+  - Best coding experience in the Qwen family
+  - Improved stability and responsiveness
+- **qwen3.6:35b** - Apr 2026 MoE (~24GB VRAM, tight fit)
+  - 35B total, 3B active per token
+  - 256K context, maximum Qwen quality
+  - Best overall pick for 24GB GPUs (per community consensus)
+
 ---
 
 ## Models NOT Recommended for RTX 3090
@@ -670,12 +858,21 @@ For detailed benchmarking guide, see [Benchmark_Automation.md](Benchmark_Automat
 
 ---
 
-**Last Updated:** January 16, 2026
+**Last Updated:** July 13, 2026
 **Hardware:** Dell T5820 + RTX 3090 (24GB)
-**Models Tested:** 48 total (1.7B to 34B parameters)
-**Date:** January 16, 2026 19:32:55 PST
+**Models Documented:** 59 total (1.7B to 35B parameters)
+**Last Benchmark Run:** January 16, 2026 19:32:55 PST
 **Benchmark Results:** [benchmark_20260116_193255.md](../llm-docker/benchmark_results/benchmark_20260116_193255.md)
 **Methodology:** Automated comprehensive benchmark suite with 5 diverse prompts per model (simple, reasoning, coding, creative, math)
+
+### New in July 2026
+- Gemma4 series (12B, 26B MoE, 31B) - Google's latest with tool calling and vision
+- GPT-OSS (20B MoE) - OpenAI's first open-weight model, Apache 2.0
+- Devstral (24B) - Mistral coding agent, SWE-Bench champion
+- Devstral Small 2 (24B) - Coding agent with 384K context
+- Mistral Small 3.1/3.2 (24B) - Updated Mistral with multimodal
+- Qwen3.5 (27B) - Alibaba Feb 2026 release
+- Qwen3.6 (27B, 35B MoE) - Alibaba Apr 2026, best coding experience
 
 ### New in January 2026
 - DeepSeek-R1 series (8B, 14B, 32B) - Chain-of-thought reasoning

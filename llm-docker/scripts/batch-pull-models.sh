@@ -18,11 +18,13 @@ fi
 
 # Model sets
 declare -A MODEL_SETS
-MODEL_SETS[small]="llama3.2:3b llama3.1:8b qwen2.5:7b"
-MODEL_SETS[medium]="llama3.1:8b-q4 qwen2.5:14b-q4 phi3:14b-q4"
-MODEL_SETS[large]="llama3.1:70b-q2 qwen2.5:72b-q2"
-MODEL_SETS[coding]="qwen2.5-coder:7b codellama:13b-q4"
-MODEL_SETS[all]="${MODEL_SETS[small]} ${MODEL_SETS[medium]} ${MODEL_SETS[large]}"
+MODEL_SETS[small]="llama3.2:3b llama3.1:8b qwen2.5:7b gemma4:12b"
+MODEL_SETS[medium]="qwen2.5:14b qwen3:14b deepseek-r1:14b phi3:14b gpt-oss:20b"
+MODEL_SETS[large]="qwen3.6:27b gemma4:31b mistral-small3.2:24b qwen2.5:32b deepseek-r1:32b"
+MODEL_SETS[coding]="qwen2.5-coder:14b devstral:24b devstral-small-2:24b qwen3.6:27b"
+MODEL_SETS[agents]="gpt-oss:20b devstral:24b devstral-small-2:24b mistral-small3.2:24b gemma4:12b"
+MODEL_SETS[2026]="gemma4:12b gpt-oss:20b gemma4:26b gemma4:31b mistral-small3.1:24b mistral-small3.2:24b devstral:24b devstral-small-2:24b qwen3.5:27b qwen3.6:27b qwen3.6:35b"
+MODEL_SETS[all]="${MODEL_SETS[small]} ${MODEL_SETS[medium]} ${MODEL_SETS[large]} ${MODEL_SETS[coding]}"
 
 # Parse arguments
 SET="${1:-small}"
@@ -31,11 +33,13 @@ if [ -z "${MODEL_SETS[$SET]}" ]; then
     echo "Usage: $0 <set>"
     echo ""
     echo "Available sets:"
-    echo "  small   - Quick testing (3-8B models)"
-    echo "  medium  - Quality testing (14B Q4 models)"
-    echo "  large   - Maximum quality (70B Q2 models)"
-    echo "  coding  - Code-focused models"
-    echo "  all     - All of the above"
+    echo "  small   - Quick testing (3-12B models)"
+    echo "  medium  - Quality testing (14-20B models)"
+    echo "  large   - Maximum quality (24-35B models)"
+    echo "  coding  - Code-focused models (devstral, qwen3.6)"
+    echo "  agents  - Agentic/tool-calling models (gpt-oss, devstral)"
+    echo "  2026    - All new July 2026 models"
+    echo "  all     - Small + medium + large + coding"
     echo ""
     echo "Example: $0 small"
     exit 1

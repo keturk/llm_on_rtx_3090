@@ -2,7 +2,7 @@
 
 **Quick Reference Guide** - For detailed benchmarks and technical analysis, see [Models_And_Benchmarks.md](Models_And_Benchmarks.md)
 
-**Last Updated:** January 2026 - Based on 48 model comprehensive benchmark
+**Last Updated:** July 2026 - 59 models documented (48 benchmarked + 11 new)
 
 This guide helps you quickly choose the right models for your RTX 3090. All models listed have been tested and validated.
 
@@ -10,16 +10,18 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 
 ## Quick Recommendations by Use Case
 
-| Use Case | Fast (60-90 tok/s) | Balanced (30-60 tok/s) | Quality (20-30 tok/s) |
+| Use Case | Fast (60-90 tok/s) | Balanced (30-60 tok/s) | Quality (Best) |
 |----------|-------------------|----------------------|---------------------|
-| **General Chat** | exaone-deep:7.8b | qwen3:8b | qwen2.5:32b |
-| **Reasoning** | marco-o1:7b | deepseek-r1:14b | deepseek-r1:32b |
-| **Coding** | qwen2.5:7b | qwen2.5-coder:14b | deepseek-coder:33b |
-| **Vision/Multimodal** | qwen3-vl:8b | gemma3:12b | qwen3-vl:32b |
+| **General Chat** | exaone-deep:7.8b | qwen3:8b | qwen3.6:27b |
+| **Reasoning** | marco-o1:7b | deepseek-r1:14b | gemma4:31b |
+| **Coding** | qwen2.5:7b | devstral:24b | qwen3.6:27b |
+| **Vision/Multimodal** | qwen3-vl:8b | gemma4:12b | gemma4:31b |
 | **Multilingual** | aya-expanse:8b | glm4:9b | aya-expanse:32b |
-| **Long Context** | phi3:14b | phi4 | qwen2.5:32b |
+| **Long Context** | phi3:14b | mistral-small3.1:24b | qwen3.6:27b (256K) |
+| **Tool Calling** | gpt-oss:20b | mistral-small3.2:24b | gemma4:26b |
+| **Coding Agents** | gpt-oss:20b | devstral:24b | devstral-small-2:24b |
 
-> 📊 **Need more options?** See [complete model tables](Models_And_Benchmarks.md#quick-reference) with all 48 tested models.
+> 📊 **Need more options?** See [complete model tables](Models_And_Benchmarks.md#quick-reference) with all 59 documented models.
 
 ---
 
@@ -57,10 +59,10 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | llama3.1:8b | ~5GB | 42.8 | Daily driver |
 | qwen3-vl:8b 🆕 | ~7GB | 40.9 | Vision |
 
-> 📋 **See all 20 small models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all small models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
 
-### Medium Models (10-14B) - Balanced
-**Top picks:** deepseek-r1:14b (56.6 tok/s), qwen3:14b (43.2 tok/s), phi3:14b (38.7 tok/s)
+### Medium Models (10-20B) - Balanced
+**Top picks:** deepseek-r1:14b (56.6 tok/s), qwen3:14b (43.2 tok/s), gpt-oss:20b (tool calling)
 
 | Model | VRAM | Speed | Best For |
 |-------|------|-------|----------|
@@ -68,21 +70,26 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | qwen3:14b 🆕 | ~9GB | 43.2 | High quality |
 | phi3:14b | ~9GB | 38.7 | Long context (128k) |
 | qwen2.5-coder:14b | ~9GB | 29.2 | Coding |
-| qwen2.5:14b | ~9GB | 29.2 | Production |
+| gemma4:12b 🆕🆕 | ~7GB | TBD | Google's latest, tool calling |
+| gpt-oss:20b 🆕🆕 | ~14GB | TBD | OpenAI MoE, best tool calling |
 
-> 📋 **See all 10 medium models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all medium models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
 
-### Large Models (22-34B) - Maximum Quality
-**Top picks:** qwen3:30b-a3b (43.7 tok/s MoE), deepseek-r1:32b (29.8 tok/s), qwen2.5:32b (21.4 tok/s)
+### Large Models (22-35B) - Maximum Quality
+**Top picks:** qwen3.6:27b (latest Qwen), devstral:24b (coding), gemma4:31b (reasoning)
 
 | Model | VRAM | Speed | Best For |
 |-------|------|-------|----------|
 | qwen3:30b-a3b 🆕 | ~18GB | 43.7 | MoE - fast! |
 | deepseek-r1:32b 🆕 | ~19GB | 29.8 | Max reasoning |
-| qwen2.5:32b | ~19GB | 21.4 | Max quality |
-| deepseek-coder:33b | ~18GB | 21.5 | Elite coding |
+| devstral:24b 🆕🆕 | ~14GB | TBD | SWE-Bench champion |
+| devstral-small-2:24b 🆕🆕 | ~15GB | TBD | Coding agent, 384K ctx |
+| mistral-small3.2:24b 🆕🆕 | ~15GB | TBD | Function calling |
+| gemma4:31b 🆕🆕 | ~20GB | TBD | Google's best dense |
+| qwen3.6:27b 🆕🆕 | ~17GB | TBD | Latest Qwen, 256K ctx |
+| qwen3.6:35b 🆕🆕 | ~24GB | TBD | Latest Qwen MoE |
 
-> 📋 **See all 15 large models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all large models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
 
 ---
 
@@ -91,12 +98,27 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 ### 🆕 Vision/Multimodal
 - **qwen3-vl:8b** - 40.9 tok/s (~7GB) - Text + image
 - **qwen3-vl:32b** - 22.1 tok/s (~23GB) - Advanced vision
-- **gemma3 series** - 4B/12B/27B sizes available
+- **gemma4:12b** 🆕🆕 - TBD (~7GB) - Google's latest with vision + tool calling
+- **gemma4:31b** 🆕🆕 - TBD (~20GB) - Best Google multimodal
+- **mistral-small3.1:24b** 🆕🆕 - TBD (~15GB) - Mistral multimodal, 128K
 
 ### 🧠 Reasoning (Chain-of-Thought)
 - **deepseek-r1:8b** - 60.9 tok/s (~5GB) - Fast reasoning
 - **deepseek-r1:14b** - 56.6 tok/s (~9GB) - **Best value** ⭐
 - **deepseek-r1:32b** - 29.8 tok/s (~19GB) - Maximum quality
+- **gemma4:31b** 🆕🆕 - TBD (~20GB) - Frontier-level reasoning
+
+### 💻 Coding & Software Engineering
+- **qwen2.5-coder:14b** - 29.2 tok/s (~9GB) - Coding specialist
+- **devstral:24b** 🆕🆕 - TBD (~14GB) - SWE-Bench 46.8%, agentic coding
+- **devstral-small-2:24b** 🆕🆕 - TBD (~15GB) - 384K context, multi-file editing
+- **qwen3.6:27b** 🆕🆕 - TBD (~17GB) - Best coding experience
+
+### 🔧 Tool Calling & Agents
+- **gpt-oss:20b** 🆕🆕 - TBD (~14GB) - **Cleanest tool-call JSON** ⭐
+- **mistral-small3.2:24b** 🆕🆕 - TBD (~15GB) - Improved function calling
+- **gemma4:12b** 🆕🆕 - TBD (~7GB) - Built-in tool calling
+- **nemotron-mini:4b** - 50.2 tok/s (~3GB) - Compact RAG/function calling
 
 ### 🌍 Multilingual
 - **aya-expanse:8b** - 32.0 tok/s (~6GB) - 10+ languages
@@ -128,6 +150,17 @@ ollama pull qwen3:14b            # General quality (43.2 tok/s)
 ollama pull qwen2.5:32b          # Max general (21.4 tok/s)
 ollama pull deepseek-r1:32b      # Max reasoning (29.8 tok/s)
 ollama pull deepseek-coder:33b   # Elite coding (21.5 tok/s)
+```
+
+### Phase 4: 2026 Models
+```bash
+ollama pull gemma4:12b            # Google's latest, tool calling
+ollama pull gpt-oss:20b           # OpenAI MoE, best tool calling
+ollama pull devstral:24b          # Mistral coding agent
+ollama pull devstral-small-2:24b  # Coding agent, 384K context
+ollama pull mistral-small3.2:24b  # Latest Mistral, function calling
+ollama pull qwen3.6:27b           # Latest Qwen, 256K context
+ollama pull gemma4:31b            # Google's best dense model
 ```
 
 > 🔬 **Comprehensive testing guide:** [Models_And_Benchmarks.md#testing-strategy](Models_And_Benchmarks.md#testing-strategy)
