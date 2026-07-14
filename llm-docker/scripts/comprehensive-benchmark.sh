@@ -1,7 +1,8 @@
 #!/bin/bash
 # Comprehensive LLM Benchmark Suite for RTX 3090
-# Updated January 2026 - 48 models including:
+# Updated July 2026 - 59 models including:
 # DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse, OLMo2, Hermes3
+# Gemma4, GPT-OSS, Devstral, Mistral-Small 3.1/3.2, Qwen3.5, Qwen3.6
 # Tests speed, VRAM usage, and quality metrics
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -52,9 +53,20 @@ MODELS=(
     "qwen3-vl:8b"
     "aya-expanse:8b"
     "olmo2:13b"
+    "gemma4:12b"
+    "gpt-oss:20b"
 
-    # === Large Models (24-34B) - Quality ===
+    # === Large Models (24-35B) - Quality ===
     "mistral-small:24b"
+    "mistral-small3.1:24b"
+    "mistral-small3.2:24b"
+    "devstral:24b"
+    "devstral-small-2:24b"
+    "gemma4:26b"
+    "gemma4:31b"
+    "qwen3.5:27b"
+    "qwen3.6:27b"
+    "qwen3.6:35b"
     "gemma2:27b"
     "gemma3:27b"
     "qwen3:30b-a3b"
@@ -89,7 +101,7 @@ echo "=== LLM Comprehensive Benchmark Suite ===" | tee "$RESULTS_FILE"
 echo "Date: $(date)" | tee -a "$RESULTS_FILE"
 echo "System: Dell T5820 + RTX 3090 (24GB)" | tee -a "$RESULTS_FILE"
 echo "Container: $OLLAMA_CONTAINER" | tee -a "$RESULTS_FILE"
-echo "Models: Original + 2025/2026 New (DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse)" | tee -a "$RESULTS_FILE"
+echo "Models: Original + 2025 (DeepSeek-R1, Qwen3, Qwen3-VL, Gemma3, GLM4, EXAONE-Deep, Falcon3, Aya-Expanse) + 2026 (Gemma4, GPT-OSS, Devstral, Mistral-Small 3.1/3.2, Qwen3.5, Qwen3.6)" | tee -a "$RESULTS_FILE"
 echo "" | tee -a "$RESULTS_FILE"
 
 # Check if GPU metrics logger is running
@@ -147,6 +159,15 @@ get_gpu_util() {
 # Function to get GPU temperature
 get_gpu_temp() {
     nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits | head -1
+}
+
+# Models released in 2025/2026, marked with 🆕 in the results tables
+is_new_model() {
+    case "$1" in
+        deepseek-r1*|qwen3*|gemma3*|gemma4*|glm4*|exaone-deep*|falcon3*|aya-expanse*|olmo2*|\
+        hermes3*|marco-o1*|smollm2*|gpt-oss*|devstral*|mistral-small3*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 # Function to benchmark a single model
@@ -212,7 +233,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     sleep 3
     
     # Get model size (use exact match with tab/space delimiter to avoid partial matches like phi4 vs phi4-mini)
-    model_size=$(docker exec "$OLLAMA_CONTAINER" ollama list | grep -E "^${model}[[:space:]]" | head -1 | awk '{print $3}' | tr -d '\n')
+    model_size=$(docker exec "$OLLAMA_CONTAINER" ollama list | grep -E "^${model}(:latest)?[[:space:]]" | head -1 | awk '{print $3, $4}' | tr -d '\n')
     
     # Run reasoning benchmark (primary metric)
     echo "--- INFERENCE_START: $model at $(date +%Y-%m-%d_%H:%M:%S) ---" >> "$RESULTS_FILE.timing"
@@ -226,11 +247,14 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     tps=$(echo "$result" | cut -d'|' -f5)
     
     # Determine quality tier based on model size and type
-    if [[ "$model" == *"32b"* ]] || [[ "$model" == *"33b"* ]] || [[ "$model" == *"34b"* ]]; then
+    if [[ "$model" == *"31b"* ]] || [[ "$model" == *"32b"* ]] || [[ "$model" == *"33b"* ]] || \
+       [[ "$model" == *"34b"* ]] || [[ "$model" == *"35b"* ]]; then
         quality="Best"
-    elif [[ "$model" == *"27b"* ]] || [[ "$model" == *"30b"* ]]; then
+    elif [[ "$model" == *"24b"* ]] || [[ "$model" == *"26b"* ]] || [[ "$model" == *"27b"* ]] || \
+         [[ "$model" == *"30b"* ]]; then
         quality="Excellent+"
-    elif [[ "$model" == *"14b"* ]] || [[ "$model" == *"12b"* ]]; then
+    elif [[ "$model" == *"12b"* ]] || [[ "$model" == *"14b"* ]] || [[ "$model" == *"20b"* ]] || \
+         [[ "$model" == *"22b"* ]]; then
         quality="Excellent"
     elif [[ "$model" == *"7b"* ]] || [[ "$model" == *"8b"* ]]; then
         quality="Very Good"
@@ -240,10 +264,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
     
     # Mark new 2025/2026 models
     model_display="$model"
-    if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]] || \
-       [[ "$model" == glm4* ]] || [[ "$model" == exaone-deep* ]] || [[ "$model" == falcon3* ]] || \
-       [[ "$model" == aya-expanse* ]] || [[ "$model" == olmo2* ]] || [[ "$model" == hermes3* ]] || \
-       [[ "$model" == marco-o1* ]] || [[ "$model" == smollm2* ]]; then
+    if is_new_model "$model"; then
         model_display="$model 🆕"
     fi
     
@@ -348,10 +369,7 @@ for model in "${AVAILABLE_MODELS[@]}"; do
         vram_gb=$(echo "scale=0; $vram / 1024" | bc)
         
         # Mark new models
-        if [[ "$model" == deepseek-r1* ]] || [[ "$model" == qwen3* ]] || [[ "$model" == gemma3* ]] || \
-           [[ "$model" == glm4* ]] || [[ "$model" == exaone-deep* ]] || [[ "$model" == falcon3* ]] || \
-           [[ "$model" == aya-expanse* ]] || [[ "$model" == olmo2* ]] || [[ "$model" == hermes3* ]] || \
-           [[ "$model" == marco-o1* ]] || [[ "$model" == smollm2* ]]; then
+        if is_new_model "$model"; then
             echo "| $model 🆕 | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
         else
             echo "| $model | ~${vram_gb}GB | $tps | $quality |" >> "$README_TABLE"
