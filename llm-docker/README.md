@@ -1,6 +1,6 @@
 # LLM Docker - Quick Reference
 
-Quick reference for LLM inference engines on Dell T5820 with RTX 3090.
+Quick reference for inference engines on Dell T5820 with RTX 3090 — LLMs and image generation.
 
 > **New User?** Start with [../QUICK_START.md](../QUICK_START.md) for 5-minute setup guide.
 
@@ -9,6 +9,7 @@ Quick reference for LLM inference engines on Dell T5820 with RTX 3090.
 ## Table of Contents
 - [Quick Start](#quick-start)
 - [Available Services](#available-services)
+- [Sharing the GPU](#sharing-the-gpu)
 - [Common Commands](#common-commands)
 - [Benchmarking](#benchmarking)
 - [Documentation](#documentation)
@@ -25,11 +26,15 @@ Quick reference for LLM inference engines on Dell T5820 with RTX 3090.
 docker exec -it ollama ollama pull llama3.2:3b
 docker exec -it ollama ollama run llama3.2:3b "Hello!"
 
+# Start image generation (Stable Diffusion)
+./scripts/start-forge.sh          # http://localhost:7860
+
 # Or try vLLM for better performance
 ./scripts/start-vllm.sh meta-llama/Llama-3.2-3B-Instruct
 
 # Stop everything
 ./scripts/stop-all.sh
+docker compose -f docker-compose.forge.yml down
 ```
 
 ---
@@ -76,6 +81,58 @@ docker exec -it ollama ollama list
 - Token streaming
 - Distributed inference
 - API at `http://localhost:8080`
+
+### Stable Diffusion WebUI Forge (Image Generation)
+**Best for:** Text-to-image, image-to-image, ControlNet
+
+```bash
+./scripts/start-forge.sh
+# Web UI:  http://localhost:7860
+# API:     http://localhost:7860/docs
+```
+
+**Features:**
+- SDXL and FLUX support
+- A1111-compatible REST API at `http://localhost:7860`
+- LoRA, ControlNet, and upscaler support
+- Runs concurrently with Ollama on the same GPU
+
+**Checkpoints** (Forge ships with no weights — you must add one):
+
+```
+/mnt/llm-models/stable-diffusion/models/Stable-diffusion/
+├── sd_xl_base_1.0.safetensors        # 6.9 GB, ~8 GB VRAM
+└── flux1-schnell-fp8.safetensors     # 17.2 GB, ~17 GB VRAM
+```
+
+📖 [Full Stable Diffusion Guide](../docs/Stable_Diffusion.md)
+
+---
+
+## Sharing the GPU
+
+Ollama and Forge **do not conflict** — different ports, different containers, and multiple
+CUDA processes can hold VRAM on one card simultaneously.
+
+The only limit is **total VRAM (24 GB)**:
+
+| Combination | Fits? |
+|-------------|-------|
+| SDXL (~8 GB) + 8B LLM (~5 GB) | ✅ Comfortable |
+| SDXL (~8 GB) + 14B LLM (~9 GB) | ✅ Fits |
+| FLUX (~17 GB) + 8B LLM (~5 GB) | ⚠️ Tight |
+| FLUX (~17 GB) + 32B LLM (~19 GB) | ❌ OOM |
+
+```bash
+# See what's holding VRAM
+nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv
+
+# Free an LLM before a heavy image run (Ollama also auto-unloads after 5 min idle)
+docker exec ollama ollama stop <model>
+
+# Or shrink Forge's footprint — set in .env, restart Forge:
+#   FORGE_ARGS=--medvram
+```
 
 ---
 
@@ -158,7 +215,7 @@ docker compose restart ollama
 ./scripts/run-full-benchmark.sh --skip-pull -y
 ```
 
-**For detailed benchmarking guide:** See [../../docs/Benchmark_Automation.md](../../docs/Benchmark_Automation.md)
+**For detailed benchmarking guide:** See [../docs/Benchmark_Automation.md](../docs/Benchmark_Automation.md)
 
 ---
 
@@ -207,10 +264,11 @@ curl http://localhost:8000/v1/completions \
 - **[../QUICK_START.md](../QUICK_START.md)** - 5-minute setup guide
 
 ### Comprehensive Guides
-- **[../docs/Models_And_Benchmarks.md](../docs/Models_And_Benchmarks.md)** - Model selection & performance data
+- **[../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)** - Model selection & performance data
+- **[../docs/Stable_Diffusion.md](../docs/Stable_Diffusion.md)** - 🎨 Image generation (Forge, checkpoints, VRAM sharing)
 - **[../docs/Benchmark_Automation.md](../docs/Benchmark_Automation.md)** - Automated benchmarking guide
 - **[../docs/LLM_System_Setup.md](../docs/LLM_System_Setup.md)** - System prerequisites & driver setup
-- **[../docs/LLM_Inference_Setup.md](../docs/LLM_Inference_Setup.md)** - Docker & Ollama configuration
+- **[../docs/LLM_Inference_Setup.md](../docs/LLM_Inference_Setup.md)** - Docker, Ollama & Forge configuration
 - **[../docs/Install.md](../docs/Install.md)** - Installation walkthrough
 
 ### Configuration References
@@ -302,7 +360,7 @@ sudo lsof -i :11434
 | **Vision** | qwen3-vl:8b | ~7GB | 40.9 tok/s |
 | **Multilingual** | aya-expanse:8b | ~6GB | 32.0 tok/s |
 
-**See full 48-model benchmark:** [../docs/Models_And_Benchmarks.md](../docs/Models_And_Benchmarks.md)
+**See full 48-model benchmark:** [../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)
 
 ---
 

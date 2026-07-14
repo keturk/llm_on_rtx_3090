@@ -1,9 +1,11 @@
 # LLM Inference Setup Guide
-## Ollama Configuration, GPU Optimization, and Model Testing
+## Ollama Configuration, GPU Optimization, Model Testing, and Image Generation
 
 **System:** Dell Precision T5820 with NVIDIA RTX 3090 (24GB)  
 **OS:** Ubuntu 24.04.3 LTS  
-**Goal:** Configure and optimize local LLM inference with GPU acceleration
+**Goal:** Configure and optimize local inference with GPU acceleration — LLMs via Ollama
+(port 11434) and image generation via Stable Diffusion WebUI Forge (port 7860), sharing
+a single GPU
 
 ---
 
@@ -33,9 +35,10 @@ If any components are missing, complete the LLM System Setup Guide first.
 2. [GPU Optimization](#gpu-optimization)
 3. [Model Testing & Validation](#model-testing-validation)
 4. [Performance Benchmarking](#performance-benchmarking)
-5. [Golden Snapshot](#golden-snapshot)
-6. [Quick Reference](#quick-reference)
-7. [Troubleshooting](#troubleshooting)
+5. [Stable Diffusion Server (Image Generation)](#stable-diffusion-server-image-generation)
+6. [Golden Snapshot](#golden-snapshot)
+7. [Quick Reference](#quick-reference)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -381,6 +384,163 @@ Look for sustained GPU utilization above 80%.
 
 ---
 
+## Stable Diffusion Server (Image Generation)
+
+The same GPU that serves LLMs can also run image generation. This section adds
+[Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge)
+as a second inference service alongside Ollama.
+
+### 1. Do They Conflict?
+
+**No.** Ollama and Forge run as independent containers:
+
+| | Ollama | Forge |
+|---|--------|-------|
+| Port | 11434 | 7860 |
+| Container | `ollama` | `forge` |
+| Compose file | `docker-compose.yml` | `docker-compose.forge.yml` |
+| Network | `llm-network` | `llm-network` (shared) |
+
+Multiple CUDA processes can hold VRAM on a single card simultaneously — the driver handles
+this natively. There is no conflict at the runtime level.
+
+The **only** constraint is total VRAM (24 GB).
+
+### 2. VRAM Budgeting
+
+| Workload | VRAM |
+|----------|------|
+| SD 1.5 | ~4 GB |
+| SDXL | ~8 GB |
+| FLUX.1 schnell (fp8) | ~17 GB |
+| Ollama 7-8B (Q4) | ~5 GB |
+| Ollama 14B (Q4) | ~9 GB |
+| Ollama 32B (Q4) | ~19 GB |
+
+- SDXL + small/medium LLM → fits comfortably.
+- FLUX + large LLM → **exceeds 24 GB, will OOM.**
+
+Ollama auto-unloads idle models after 5 minutes. To force it before a heavy image run:
+
+```bash
+docker exec ollama ollama stop <model>
+
+# Confirm VRAM is free
+nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv
+```
+
+If you need both resident at once, run Forge in reduced-VRAM mode via `.env`:
+
+```bash
+FORGE_ARGS=--medvram     # slower, but frees several GB
+```
+
+### 3. Configure
+
+Add to `.env`:
+
+```bash
+# Stable Diffusion Forge Configuration
+FORGE_PORT=7860
+FORGE_ARGS=
+```
+
+The service is defined in `docker-compose.forge.yml` (kept separate so Forge can be started
+and stopped independently of Ollama). It uses the same `runtime: nvidia` pattern:
+
+```yaml
+services:
+  forge:
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    ports:
+      - "${FORGE_PORT:-7860}:7860"
+```
+
+### 4. Start
+
+```bash
+cd ~/llm-docker
+./scripts/start-forge.sh
+```
+
+First run takes **5-10 minutes** — it builds the image and installs PyTorch (cu128) into a
+persistent Docker volume (`forge-venv`), so rebuilds don't reinstall it. Later starts are fast.
+
+```bash
+# Watch the build
+docker compose -f docker-compose.forge.yml logs -f
+
+# Verify
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost:7860    # expect 200
+```
+
+### 5. Add a Checkpoint
+
+Forge is only the **server** — it ships with no weights. A *checkpoint* is the trained model
+(`.safetensors`) that actually generates images. This mirrors Ollama: the server is useless
+until you pull a model.
+
+The container launches with `--no-download-sd-model`, so nothing is fetched automatically.
+
+```bash
+cd /mnt/llm-models/stable-diffusion/models/Stable-diffusion/
+
+# SDXL base — 6.9 GB, ~8 GB VRAM, OpenRAIL++-M license
+wget -O sd_xl_base_1.0.safetensors \
+  "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
+
+# FLUX.1 schnell — 17.2 GB, ~17 GB VRAM, Apache 2.0 license
+wget -O flux1-schnell-fp8.safetensors \
+  "https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors"
+```
+
+Then refresh Forge's model list (no restart needed):
+
+```bash
+curl -X POST http://localhost:7860/sdapi/v1/refresh-checkpoints
+curl -s http://localhost:7860/sdapi/v1/sd-models | python3 -m json.tool
+```
+
+Or click the **🔄 refresh** button next to the checkpoint dropdown in the UI.
+
+> ⚠️ A partially-downloaded `.safetensors` will still appear in the dropdown but throws a
+> corrupt-tensor error on load. Verify completeness before selecting — see the
+> [Stable Diffusion Guide](Stable_Diffusion.md#adding-a-checkpoint).
+
+### 6. Generation Settings
+
+SDXL and FLUX need **different** settings — reusing SDXL's for FLUX produces garbage:
+
+| | SDXL | FLUX.1 schnell |
+|---|------|----------------|
+| Resolution | 1024×1024 | 1024×1024 |
+| Sampler | DPM++ 2M Karras | Euler + Simple |
+| Steps | 25-30 | **4** (distilled) |
+| CFG | 6-7 | 1.0 |
+
+FLUX schnell is distilled to 4 steps — running *more* steps degrades output.
+
+### 7. API Access
+
+Forge exposes the standard A1111 API on port 7860:
+
+```bash
+curl -s -X POST http://localhost:7860/sdapi/v1/txt2img \
+  -H 'Content-Type: application/json' \
+  -d '{"prompt":"a red ceramic teapot, solid white background, centered",
+       "steps":25, "width":1024, "height":1024, "cfg_scale":7}' \
+  | python3 -c "import json,sys,base64; open('out.png','wb').write(base64.b64decode(json.load(sys.stdin)['images'][0]))"
+```
+
+Interactive API docs: http://localhost:7860/docs
+
+📖 Full reference, build gotchas, and troubleshooting: **[Stable Diffusion Guide](Stable_Diffusion.md)**
+
+---
+
 ## Golden Snapshot
 
 After successful configuration and testing, create a restore point.
@@ -442,6 +602,15 @@ cd ~/llm-docker && ./scripts/start-ollama.sh
 
 # Stop Ollama
 cd ~/llm-docker && ./scripts/stop-all.sh
+
+# Start Stable Diffusion (port 7860)
+cd ~/llm-docker && ./scripts/start-forge.sh
+
+# Stop Stable Diffusion
+cd ~/llm-docker && docker compose -f docker-compose.forge.yml down
+
+# Free VRAM held by an LLM (before a heavy image generation run)
+docker exec ollama ollama stop <model>
 
 # List installed models
 docker exec -it ollama ollama list
@@ -638,6 +807,21 @@ docker exec -it ollama ollama run model-name --ctx-size 2048
 nvidia-smi
 ```
 
+4. **If running Ollama and Forge together** — the two share the 24 GB pool. See exactly
+   what's holding VRAM, then free it:
+```bash
+nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv
+
+# Unload the LLM (Ollama also auto-unloads idle models after 5 min)
+docker exec ollama ollama stop <model>
+
+# Or shrink Forge's footprint — set in .env, then restart Forge:
+#   FORGE_ARGS=--medvram
+```
+
+   Common overflow: FLUX (~17 GB) + a 14B+ LLM (~9 GB) exceeds 24 GB. Either use SDXL
+   (~8 GB) instead, or unload the LLM first.
+
 ---
 
 ## Performance Optimization Tips
@@ -684,33 +868,52 @@ docker exec -it ollama ollama run model --temperature 0.9
 ~/llm-docker/
 ├── .env                          # Environment configuration
 ├── docker-compose.yml            # Ollama service definition
+├── docker-compose.forge.yml      # Stable Diffusion Forge service
+├── forge/
+│   ├── Dockerfile               # Forge image (CUDA 12.8 + Python 3.12)
+│   └── entrypoint.sh            # venv bootstrap + launch
 └── scripts/
     ├── start-ollama.sh          # Start Ollama
+    ├── start-forge.sh           # Start Stable Diffusion
     ├── stop-all.sh              # Stop all services
     └── benchmark.sh             # Performance benchmarking
 
 /mnt/llm-models/                  # 4TB NVMe
-└── ollama/                       # Ollama models
-    └── models/
-        ├── manifests/
-        └── blobs/
+├── ollama/                       # Ollama models
+│   └── models/
+│       ├── manifests/
+│       └── blobs/
+└── stable-diffusion/             # Image generation
+    ├── models/
+    │   ├── Stable-diffusion/    # Checkpoints (.safetensors)
+    │   ├── VAE/
+    │   ├── Lora/
+    │   ├── ControlNet/
+    │   └── ESRGAN/
+    ├── outputs/                  # Generated images
+    └── embeddings/
 
 /mnt/llm-data/                    # 1TB NVMe
 └── logs/
     └── ollama/                   # Ollama logs
 ```
 
+Forge's Python venv and extensions live in Docker **named volumes** (`forge-venv`,
+`forge-extensions`) rather than on the NVMe, so a container rebuild doesn't trigger a
+full PyTorch reinstall.
+
 ---
 
 ## Next Steps
 
-Your LLM inference environment is now production ready. Consider:
+Your inference environment is now production ready. Consider:
 
-1. **API Integration** - Connect applications to `http://localhost:11434`
+1. **API Integration** - Connect applications to `http://localhost:11434` (LLM) and `http://localhost:7860` (image gen)
 2. **Fine-tuning** - Create custom models with Modelfile
 3. **RAG Applications** - Add vector database (ChromaDB, Qdrant)
 4. **Multiple Engines** - Add vLLM or TGI for specialized workloads
-5. **Second GPU** - Enable 70B+ models with additional RTX 3090
+5. **Image Generation** - Add LoRAs, ControlNet, and upscalers to Forge — see [Stable Diffusion Guide](Stable_Diffusion.md)
+6. **Second GPU** - Enable 70B+ models, or dedicate one card to LLMs and one to image generation
 
 ---
 

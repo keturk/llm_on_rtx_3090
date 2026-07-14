@@ -90,6 +90,38 @@ curl http://localhost:11434/api/generate -d '{
 
 ---
 
+## 6. Image Generation (Optional)
+
+Stable Diffusion runs on the **same GPU** as Ollama — no conflict, they just share the
+24 GB VRAM pool.
+
+```bash
+# Start Forge (5-10 min on first run — installs PyTorch)
+./scripts/start-forge.sh
+
+# Open the UI
+#   http://localhost:7860
+```
+
+Forge has **no model weights** out of the box. Download a checkpoint:
+
+```bash
+cd /mnt/llm-models/stable-diffusion/models/Stable-diffusion/
+
+# SDXL — 6.9 GB, ~8 GB VRAM, good all-rounder
+wget -O sd_xl_base_1.0.safetensors \
+  "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
+```
+
+Then hit the **🔄 refresh** button next to the checkpoint dropdown in the UI.
+
+> ⚠️ Running FLUX (~17 GB) plus a large LLM will exceed 24 GB. Free the LLM first:
+> `docker exec ollama ollama stop <model>`
+
+📖 [Full Stable Diffusion Guide](docs/Stable_Diffusion.md)
+
+---
+
 ## Common Commands
 
 ```bash
@@ -101,16 +133,27 @@ docker exec -it ollama ollama rm llama3.2:3b
 
 # Stop all services
 ./scripts/stop-all.sh
+docker compose -f docker-compose.forge.yml down   # stop Forge
+
+# Free VRAM held by an LLM (before heavy image generation)
+docker exec ollama ollama stop <model>
 
 # Monitor GPU
 watch -n 1 nvidia-smi
 ```
 
+## Service Ports
+
+| Service | Port | URL |
+|---------|------|-----|
+| Ollama | 11434 | http://localhost:11434 |
+| Forge (Stable Diffusion) | 7860 | http://localhost:7860 |
+
 ---
 
 ## Next Steps
 
-1. **Try More Models:** See [docs/Models_And_Benchmarks.md](docs/Models_And_Benchmarks.md) for recommendations
+1. **Try More Models:** See [docs/Models_and_Benchmarks.md](docs/Models_and_Benchmarks.md) for recommendations
 2. **Run Benchmarks:** Use `./scripts/run-full-benchmark.sh` to test performance
 3. **Read Full Guide:** Check [llm-docker/README.md](llm-docker/README.md) for detailed usage
 

@@ -1,0 +1,42 @@
+services:
+  forge:
+    build:
+      context: ./forge
+      dockerfile: Dockerfile
+    container_name: forge
+    restart: unless-stopped
+    runtime: nvidia
+    ports:
+      - "0.0.0.0:${FORGE_PORT:-7860}:7860"
+    volumes:
+      # Persist venv so deps aren't reinstalled on restart
+      - forge-venv:/app/venv
+      # Model storage on fast NVMe drive
+      - ${MODELS_PATH:-/mnt/llm-models}/stable-diffusion/models:/app/models
+      # Output images
+      - ${MODELS_PATH:-/mnt/llm-models}/stable-diffusion/outputs:/app/outputs
+      # Extensions persist across rebuilds
+      - forge-extensions:/app/extensions
+      # Embeddings
+      - ${MODELS_PATH:-/mnt/llm-models}/stable-diffusion/embeddings:/app/embeddings
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - CUDA_VISIBLE_DEVICES=0
+      - FORGE_ARGS=${FORGE_ARGS:-}
+      - LD_PRELOAD=libtcmalloc.so
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  forge-venv:
+  forge-extensions:
+
+networks:
+  default:
+    name: llm-network

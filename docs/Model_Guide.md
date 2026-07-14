@@ -1,6 +1,6 @@
 # Model Selection Guide (RTX 3090 24GB)
 
-**Quick Reference Guide** - For detailed benchmarks and technical analysis, see [Models_And_Benchmarks.md](Models_And_Benchmarks.md)
+**Quick Reference Guide** - For detailed benchmarks and technical analysis, see [Models_and_Benchmarks.md](Models_and_Benchmarks.md)
 
 **Last Updated:** July 2026 - 59 models documented (48 benchmarked + 11 new)
 
@@ -21,7 +21,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | **Tool Calling** | gpt-oss:20b | mistral-small3.2:24b | gemma4:26b |
 | **Coding Agents** | gpt-oss:20b | devstral:24b | devstral-small-2:24b |
 
-> 📊 **Need more options?** See [complete model tables](Models_And_Benchmarks.md#quick-reference) with all 59 documented models.
+> 📊 **Need more options?** See [complete model tables](Models_and_Benchmarks.md#quick-reference) with all 59 documented models.
 
 ---
 
@@ -41,7 +41,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 - **qwen3:8b** - 62.1 tok/s (next-gen balanced)
 - **deepseek-r1:8b** - 60.9 tok/s (reasoning with thinking)
 
-> 📈 **See all speed rankings:** [Models_And_Benchmarks.md#quick-reference](Models_And_Benchmarks.md#quick-reference)
+> 📈 **See all speed rankings:** [Models_and_Benchmarks.md#quick-reference](Models_and_Benchmarks.md#quick-reference)
 
 ---
 
@@ -59,7 +59,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | llama3.1:8b | ~5GB | 42.8 | Daily driver |
 | qwen3-vl:8b 🆕 | ~7GB | 40.9 | Vision |
 
-> 📋 **See all small models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all small models:** [Models_and_Benchmarks.md#detailed-model-analysis](Models_and_Benchmarks.md#detailed-model-analysis)
 
 ### Medium Models (10-20B) - Balanced
 **Top picks:** deepseek-r1:14b (56.6 tok/s), qwen3:14b (43.2 tok/s), gpt-oss:20b (tool calling)
@@ -73,7 +73,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | gemma4:12b 🆕🆕 | ~7GB | TBD | Google's latest, tool calling |
 | gpt-oss:20b 🆕🆕 | ~14GB | TBD | OpenAI MoE, best tool calling |
 
-> 📋 **See all medium models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all medium models:** [Models_and_Benchmarks.md#detailed-model-analysis](Models_and_Benchmarks.md#detailed-model-analysis)
 
 ### Large Models (22-35B) - Maximum Quality
 **Top picks:** qwen3.6:27b (latest Qwen), devstral:24b (coding), gemma4:31b (reasoning)
@@ -89,7 +89,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 | qwen3.6:27b 🆕🆕 | ~17GB | TBD | Latest Qwen, 256K ctx |
 | qwen3.6:35b 🆕🆕 | ~24GB | TBD | Latest Qwen MoE |
 
-> 📋 **See all large models:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📋 **See all large models:** [Models_and_Benchmarks.md#detailed-model-analysis](Models_and_Benchmarks.md#detailed-model-analysis)
 
 ---
 
@@ -125,7 +125,7 @@ This guide helps you quickly choose the right models for your RTX 3090. All mode
 - **aya-expanse:32b** - 20.9 tok/s (~20GB) - Large multilingual
 - **glm4:9b** - 31.4 tok/s (~5GB) - Chinese-English
 
-> 📖 **Detailed model descriptions:** [Models_And_Benchmarks.md#detailed-model-analysis](Models_And_Benchmarks.md#detailed-model-analysis)
+> 📖 **Detailed model descriptions:** [Models_and_Benchmarks.md#detailed-model-analysis](Models_and_Benchmarks.md#detailed-model-analysis)
 
 ---
 
@@ -163,7 +163,7 @@ ollama pull qwen3.6:27b           # Latest Qwen, 256K context
 ollama pull gemma4:31b            # Google's best dense model
 ```
 
-> 🔬 **Comprehensive testing guide:** [Models_And_Benchmarks.md#testing-strategy](Models_And_Benchmarks.md#testing-strategy)
+> 🔬 **Comprehensive testing guide:** [Models_and_Benchmarks.md#testing-strategy](Models_and_Benchmarks.md#testing-strategy)
 
 ---
 
@@ -187,7 +187,7 @@ ollama pull gemma4:31b            # Google's best dense model
 | Q8 | <1% | 2x | Quality critical |
 | Q2 | ~15-20% | 8x | Last resort (70B+ models) |
 
-> 🔧 **Detailed technical specs:** [Models_And_Benchmarks.md#vram-usage--planning](Models_And_Benchmarks.md#vram-usage--planning) and [Quantization Impact](Models_And_Benchmarks.md#quantization-impact)
+> 🔧 **Detailed technical specs:** [Models_and_Benchmarks.md#vram-usage--planning](Models_and_Benchmarks.md#vram-usage--planning) and [Quantization Impact](Models_and_Benchmarks.md#quantization-impact)
 
 ---
 
@@ -214,10 +214,10 @@ nvidia-smi
 
 ## Related Documentation
 
-- **[Models_And_Benchmarks.md](Models_And_Benchmarks.md)** - Complete benchmark data, detailed model analysis, technical specifications
+- **[Models_and_Benchmarks.md](Models_and_Benchmarks.md)** - Complete benchmark data, detailed model analysis, technical specifications
 - **[Benchmark_Automation.md](Benchmark_Automation.md)** - Automated benchmarking workflow
 - **[Install.md](Install.md)** - Installation walkthrough
 
 ---
 
-**Need more details?** This is a quick reference guide. For comprehensive benchmarks, detailed model descriptions, temperature/power data, and full technical analysis, see [Models_And_Benchmarks.md](Models_And_Benchmarks.md).
+**Need more details?** This is a quick reference guide. For comprehensive benchmarks, detailed model descriptions, temperature/power data, and full technical analysis, see [Models_and_Benchmarks.md](Models_and_Benchmarks.md).

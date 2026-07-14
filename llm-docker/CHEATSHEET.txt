@@ -8,10 +8,34 @@
 
 🚀 START SERVICES
 ─────────────────────────────────────────────────────────────────
-./scripts/start-ollama.sh           # Start Ollama (recommended)
+./scripts/start-ollama.sh           # Start Ollama (recommended)  :11434
+./scripts/start-forge.sh            # Start Stable Diffusion      :7860
 ./scripts/start-vllm.sh [model]     # Start vLLM
 ./scripts/start-tgi.sh [model]      # Start TGI
 ./scripts/stop-all.sh               # Stop everything
+docker compose -f docker-compose.forge.yml down    # Stop Forge
+
+🎨 STABLE DIFFUSION (FORGE)
+─────────────────────────────────────────────────────────────────
+Web UI:  http://localhost:7860
+API:     http://localhost:7860/docs
+
+# Checkpoints go here (then hit 🔄 refresh in the UI):
+/mnt/llm-models/stable-diffusion/models/Stable-diffusion/
+
+# Installed:  sd_xl_base_1.0 (~8GB VRAM) | flux1-schnell-fp8 (~17GB VRAM)
+
+# SDXL settings:  1024x1024, DPM++ 2M Karras, 25-30 steps, CFG 6-7
+# FLUX settings:  1024x1024, Euler+Simple, 4 steps, CFG 1.0  (4 steps! more = worse)
+
+⚠️  GPU IS SHARED — VRAM ADDS UP (24GB total)
+─────────────────────────────────────────────────────────────────
+docker exec ollama ollama stop <model>    # Free VRAM before FLUX runs
+nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv
+
+# SDXL (8GB) + 14B LLM (9GB)  = OK
+# FLUX (17GB) + 32B LLM (19GB) = OOM!
+# Ollama auto-unloads idle models after 5 min.
 
 📦 OLLAMA COMMANDS (Inside Container)
 ─────────────────────────────────────────────────────────────────

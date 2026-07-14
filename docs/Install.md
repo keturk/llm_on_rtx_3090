@@ -90,6 +90,60 @@ docker exec -it ollama ollama run llama3.2:3b "Hello! Tell me a joke."
 docker exec ollama ollama list
 ```
 
+## Step 7: Install the Stable Diffusion Server (Optional)
+
+Image generation via [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge),
+running alongside Ollama on the same GPU.
+
+```bash
+cd ~/llm-docker
+./scripts/start-forge.sh
+```
+
+First run takes **5-10 minutes** (builds the image, installs PyTorch into a persistent
+volume). Later starts are fast. When it's up:
+
+| Service | URL |
+|---------|-----|
+| Forge Web UI | http://localhost:7860 |
+| Ollama API | http://localhost:11434 |
+
+### Add a Checkpoint
+
+Forge ships with **no model weights** — it's just the server. You need a *checkpoint*
+(a `.safetensors` file) before it can generate anything, exactly like `ollama pull` for LLMs.
+
+```bash
+cd /mnt/llm-models/stable-diffusion/models/Stable-diffusion/
+
+# SDXL base (6.9 GB, ~8 GB VRAM) — broad style range, huge LoRA ecosystem
+wget -O sd_xl_base_1.0.safetensors \
+  "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
+
+# FLUX.1 schnell (17.2 GB, ~17 GB VRAM) — Apache 2.0, best prompt-following
+wget -O flux1-schnell-fp8.safetensors \
+  "https://huggingface.co/Comfy-Org/flux1-schnell/resolve/main/flux1-schnell-fp8.safetensors"
+```
+
+Then click the **🔄 refresh** button next to the checkpoint dropdown in the UI — no restart
+needed.
+
+### Ollama and Forge Share the GPU
+
+They do **not** conflict — separate ports, separate containers, and multiple CUDA processes
+can hold VRAM on one card simultaneously. The only limit is **total VRAM (24 GB)**:
+
+- SDXL (~8 GB) + a small/medium LLM → comfortable.
+- FLUX (~17 GB) + a large LLM → **will OOM**. Free the LLM first:
+
+```bash
+docker exec ollama ollama stop <model>
+```
+
+Ollama also auto-unloads idle models after 5 minutes, so conflicts often clear on their own.
+
+📖 Full details: [Stable Diffusion Guide](Stable_Diffusion.md)
+
 ## Troubleshooting
 
 ### Docker Permission Denied
@@ -117,10 +171,23 @@ docker system prune -a
 
 ### Port Already in Use
 ```bash
-# Check what's using port 11434
+# Check what's using port 11434 (Ollama) or 7860 (Forge)
 sudo lsof -i :11434
+sudo lsof -i :7860
 
-# Stop conflicting service or change port in .env
+# Stop conflicting service, or change OLLAMA_PORT / FORGE_PORT in .env
+```
+
+### Out of GPU Memory (Ollama + Forge together)
+```bash
+# See what's holding VRAM
+nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv
+
+# Free the LLM before a heavy image generation run
+docker exec ollama ollama stop <model>
+
+# Or run Forge in low-VRAM mode — set in .env:
+#   FORGE_ARGS=--medvram
 ```
 
 ## Next Steps
@@ -137,11 +204,13 @@ Once installed:
 ```bash
 # Start services
 ./scripts/start-ollama.sh
+./scripts/start-forge.sh              # Stable Diffusion (port 7860)
 ./scripts/start-vllm.sh [model]
 ./scripts/start-tgi.sh [model]
 
 # Stop all services
 ./scripts/stop-all.sh
+docker compose -f docker-compose.forge.yml down    # stop Forge
 
 # Test a model
 ./scripts/test-model.sh ollama "What is AI?"
@@ -157,6 +226,9 @@ watch -n 1 nvidia-smi
 
 - **Docker configs**: `~/llm-docker/`
 - **Model storage**: `/mnt/llm-models/` (symlink: `~/models`)
+- **LLM models**: `/mnt/llm-models/ollama/`
+- **SD checkpoints**: `/mnt/llm-models/stable-diffusion/models/Stable-diffusion/`
+- **SD outputs**: `/mnt/llm-models/stable-diffusion/outputs/`
 - **Working data**: `/mnt/llm-data/` (symlink: `~/data`)
 - **Benchmarks**: `/mnt/llm-data/benchmarks/`
 - **Logs**: `/mnt/llm-data/logs/`

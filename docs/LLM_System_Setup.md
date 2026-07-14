@@ -382,6 +382,10 @@ Create an organized directory structure for LLM workloads.
 
 ```bash
 mkdir -p /mnt/llm-models/{ollama,vllm,tgi,gguf}
+
+# Stable Diffusion (image generation) storage
+mkdir -p /mnt/llm-models/stable-diffusion/models/{Stable-diffusion,VAE,Lora,ControlNet,ESRGAN}
+mkdir -p /mnt/llm-models/stable-diffusion/{outputs,embeddings}
 ```
 
 **Purpose:**
@@ -389,6 +393,19 @@ mkdir -p /mnt/llm-models/{ollama,vllm,tgi,gguf}
 - **vllm/** - vLLM model cache (future use)
 - **tgi/** - Text Generation Inference cache (future use)
 - **gguf/** - Raw GGUF model files (future use)
+- **stable-diffusion/** - Image generation models and outputs (see below)
+
+**Stable Diffusion subdirectories:**
+- **models/Stable-diffusion/** - Checkpoints (`.safetensors`) — SDXL, FLUX, SD 1.5
+- **models/VAE/** - VAE models
+- **models/Lora/** - LoRA fine-tunes
+- **models/ControlNet/** - ControlNet models
+- **models/ESRGAN/** - Upscalers
+- **outputs/** - Generated images
+- **embeddings/** - Textual inversion embeddings
+
+> These are also created automatically by `./scripts/start-forge.sh`, so this step is only
+> needed if you're setting up storage ahead of time.
 
 ### 2. Create Working Data Directories (1TB Drive)
 
@@ -423,6 +440,10 @@ Expected output:
 /mnt/llm-models
 ├── gguf
 ├── ollama
+├── stable-diffusion
+│   ├── embeddings
+│   ├── models
+│   └── outputs
 ├── tgi
 └── vllm
 
@@ -541,13 +562,18 @@ Run with: `~/check-system.sh`
 
 ## What's Next
 
-This base system is now ready for LLM inference engine configuration. Proceed to the **[LLM Inference Setup Guide](LLM_Inference_Setup.md)** for:
+This base system is now ready for inference engine configuration. Proceed to the **[LLM Inference Setup Guide](LLM_Inference_Setup.md)** for:
 
 - Docker Compose configuration for Ollama
 - GPU optimization and troubleshooting
 - Model downloading and testing
 - Performance benchmarking
 - Golden snapshot creation
+
+For **image generation** (Stable Diffusion WebUI Forge) on the same GPU, see the
+**[Stable Diffusion Guide](Stable_Diffusion.md)**. The same NVIDIA driver, Docker runtime,
+and NVMe storage configured above serve both workloads — no additional system-level setup
+is required.
 
 ---
 
@@ -558,6 +584,8 @@ This base system is now ready for LLM inference engine configuration. Proceed to
 /etc/docker/daemon.json                 # Docker NVIDIA runtime config
 /mnt/llm-data/                          # 1TB NVMe - Working data
 /mnt/llm-models/                        # 4TB NVMe - Model storage
+/mnt/llm-models/ollama/                 # LLM models
+/mnt/llm-models/stable-diffusion/       # Image generation models & outputs
 ~/models -> /mnt/llm-models             # Symlink for convenience
 ~/data -> /mnt/llm-data                 # Symlink for convenience
 ~/check-system.sh                       # System health check script

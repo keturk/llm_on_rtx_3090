@@ -2,5 +2,8 @@
 *.timing
 *.csv
 
+# Editor / backup files
+*.bak
+
 # Claude Code settings
 .claude/

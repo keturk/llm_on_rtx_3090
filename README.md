@@ -1,23 +1,24 @@
-# Local LLM Inference on RTX 3090
+# Local LLM & Image Generation on RTX 3090
 
-Battle-tested guide for local LLM inference on Ubuntu 24.04 with NVIDIA GPU acceleration. From fresh OS install to running 32B parameter models at 97% GPU utilization. Includes Docker GPU runtime fixes, NVMe storage optimization, and Ollama deployment.
+Battle-tested guide for local AI inference on Ubuntu 24.04 with NVIDIA GPU acceleration. From fresh OS install to running 32B parameter models at 97% GPU utilization — plus Stable Diffusion image generation on the same card. Includes Docker GPU runtime fixes, NVMe storage optimization, Ollama deployment, and SD WebUI Forge.
 
 ---
 
 ## 🎯 What This Project Does
 
-This repository provides a complete, production-ready setup for running large language models locally on consumer/workstation NVIDIA GPUs. No cloud costs, no API limits, full privacy.
+This repository provides a complete, production-ready setup for running large language models **and image generation models** locally on consumer/workstation NVIDIA GPUs. No cloud costs, no API limits, full privacy.
 
 **Key achievements:**
 - ✅ **59 models documented** from 1.7B to 35B parameters
 - ✅ Run 32B parameter models entirely on GPU (no CPU offloading)
 - ✅ Achieve 80-97% GPU utilization during inference
 - ✅ 17-90 tokens/second depending on model size
+- ✅ **Stable Diffusion (SDXL + FLUX) running alongside Ollama on one GPU**
 - ✅ Proper storage separation (models vs. working data)
 - ✅ Docker-based deployment for reproducibility
 - ✅ Comprehensive benchmarking suite included
 
-**🆕 July 2026 Update:** Added 11 new models including Gemma 4, GPT-OSS (OpenAI), Devstral, Mistral Small 3.1/3.2, Qwen 3.5/3.6!
+**🆕 July 2026 Update:** Added 11 new models including Gemma 4, GPT-OSS (OpenAI), Devstral, Mistral Small 3.1/3.2, Qwen 3.5/3.6 — plus a **Stable Diffusion WebUI Forge** image generation server!
 
 ---
 
@@ -46,22 +47,28 @@ llm_on_rtx_3090/
 ├── LICENSE                            # MIT License
 ├── docs/
 │   ├── Model_Guide.md                 # 🎯 Quick model selection guide (start here!)
-│   ├── Models_And_Benchmarks.md       # 📊 Complete benchmark analysis & model details
+│   ├── Models_and_Benchmarks.md       # 📊 Complete benchmark analysis & model details
+│   ├── Stable_Diffusion.md            # 🎨 Image generation (SD WebUI Forge)
 │   ├── Benchmark_Automation.md        # 🤖 Automated benchmark workflow
 │   ├── Install.md                     # 💿 Installation walkthrough
 │   ├── LLM_System_Setup.md            # System prerequisites & drivers
-│   ├── LLM_Inference_Setup.md         # Docker & Ollama configuration
+│   ├── LLM_Inference_Setup.md         # Docker, Ollama & Forge configuration
 │   └── Dell_T5820_Hardware.md         # Hardware specifications
 └── llm-docker/
     ├── README.md                      # Quick reference & commands
     ├── CHEATSHEET.txt                 # Quick command reference
     ├── .env                           # Environment configuration
     ├── docker-compose.yml             # Ollama service
+    ├── docker-compose.forge.yml       # 🆕 Stable Diffusion Forge service
     ├── docker-compose.vllm.yml        # vLLM (optional)
     ├── docker-compose.tgi.yml         # Text Generation Inference (optional)
+    ├── forge/                         # 🆕 Forge image build
+    │   ├── Dockerfile                 #    CUDA 12.8 + Python 3.12
+    │   └── entrypoint.sh              #    venv bootstrap + launch
     ├── scripts/
     │   ├── start-ollama.sh            # Start Ollama service
-    │   ├── run-full-benchmark.sh      # 🆕 Automated full benchmark
+    │   ├── start-forge.sh             # 🆕 Start Stable Diffusion service
+    │   ├── run-full-benchmark.sh      # Automated full benchmark
     │   ├── comprehensive-benchmark.sh # Full benchmark suite
     │   ├── pull-benchmark-models.sh   # Download test models
     │   ├── benchmark.sh               # Basic performance testing
@@ -115,6 +122,18 @@ docker exec -it ollama ollama run deepseek-r1:14b "What is 15% of 847? Think ste
 # Check GPU utilization
 nvidia-smi
 ```
+
+### 4. (Optional) Deploy Image Generation
+
+```bash
+# Start Stable Diffusion WebUI Forge — takes 5-10 min on first run
+./scripts/start-forge.sh
+
+# Open http://localhost:7860
+```
+
+See the [Stable Diffusion Guide](docs/Stable_Diffusion.md) for checkpoint downloads and
+VRAM budgeting.
 
 ---
 
@@ -183,7 +202,7 @@ Tested on RTX 3090 (24GB VRAM) - **59 models documented** (July 2026):
 
 🆕 = New in 2025 update | 🆕🆕 = New in July 2026 update
 
-📈 **[Full Model Guide & Benchmarks →](docs/Models_And_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
+📈 **[Full Model Guide & Benchmarks →](docs/Models_and_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
 
 ---
 
@@ -260,6 +279,61 @@ docker exec -it ollama ollama run exaone-deep:7.8b "Explain quantum entanglement
 
 ---
 
+## 🎨 Image Generation (Stable Diffusion)
+
+The same RTX 3090 that serves LLMs also runs image generation via
+[Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge).
+
+```bash
+cd llm-docker
+./scripts/start-forge.sh      # http://localhost:7860
+```
+
+### Installed Checkpoints
+
+| Checkpoint | Size | VRAM | License | Notes |
+|-----------|------|------|---------|-------|
+| SDXL base 1.0 | 6.9 GB | ~8 GB | OpenRAIL++-M | Broad style range, huge LoRA ecosystem |
+| FLUX.1 schnell (fp8) | 17.2 GB | ~17 GB | **Apache 2.0** | Best prompt-following; 4-step distilled |
+
+> Forge ships with **no weights** — it's just the server. A *checkpoint* (`.safetensors`) is
+> the model that actually generates images, exactly like `ollama pull` for LLMs.
+
+### Do Ollama and Forge Conflict?
+
+**No.** Separate ports (11434 / 7860), separate containers, shared `llm-network`. Multiple
+CUDA processes hold VRAM on one card simultaneously — the driver handles this natively.
+
+The only constraint is **total VRAM (24 GB)**:
+
+| Combination | Fits? |
+|-------------|-------|
+| SDXL (~8 GB) + 8B LLM (~5 GB) | ✅ Comfortable |
+| SDXL (~8 GB) + 14B LLM (~9 GB) | ✅ Fits |
+| FLUX (~17 GB) + 8B LLM (~5 GB) | ⚠️ Tight |
+| FLUX (~17 GB) + 32B LLM (~19 GB) | ❌ OOM |
+
+Ollama auto-unloads idle models after 5 minutes. To force it before a heavy image run:
+
+```bash
+docker exec ollama ollama stop <model>
+```
+
+### Settings Cheat Sheet
+
+SDXL and FLUX need **different** settings — reusing SDXL's for FLUX produces garbage:
+
+| | SDXL | FLUX.1 schnell |
+|---|------|----------------|
+| Resolution | 1024×1024 | 1024×1024 |
+| Sampler | DPM++ 2M Karras | Euler + Simple |
+| Steps | 25-30 | **4** (distilled — more is worse) |
+| CFG | 6-7 | 1.0 |
+
+🎨 **[Full Stable Diffusion Guide →](docs/Stable_Diffusion.md)** — checkpoints, LoRAs, API usage, VRAM tuning, and build troubleshooting.
+
+---
+
 ## 🔧 Key Problems Solved
 
 ### 1. Docker GPU Runtime Configuration
@@ -290,7 +364,8 @@ services:
 
 ## 🛠️ Included Tools
 
-- **Ollama** - Primary inference engine with simple model management
+- **Ollama** - Primary LLM inference engine with simple model management
+- **SD WebUI Forge** - Image generation (SDXL, FLUX) sharing the same GPU
 - **vLLM** - High-performance inference (optional, for advanced use)
 - **TGI** - Text Generation Inference by Hugging Face (optional)
 - **Benchmark scripts** - Automated performance testing
@@ -311,11 +386,12 @@ services:
 | Document | Description |
 |----------|-------------|
 | [**Model Selection Guide**](docs/Model_Guide.md) | **🎯 Which model should I use? (start here!)** |
-| [**Models & Benchmarks**](docs/Models_And_Benchmarks.md) | **📊 Complete benchmark analysis & detailed model info** |
+| [**Models & Benchmarks**](docs/Models_and_Benchmarks.md) | **📊 Complete benchmark analysis & detailed model info** |
+| [**Stable Diffusion Guide**](docs/Stable_Diffusion.md) | **🎨 Image generation — Forge, checkpoints, VRAM sharing** |
 | [Benchmark Automation](docs/Benchmark_Automation.md) | Automated benchmarking workflow |
 | [Installation Guide](docs/Install.md) | Step-by-step installation walkthrough |
 | [LLM System Setup](docs/LLM_System_Setup.md) | Complete OS and driver configuration |
-| [LLM Inference Setup](docs/LLM_Inference_Setup.md) | Ollama deployment and optimization |
+| [LLM Inference Setup](docs/LLM_Inference_Setup.md) | Ollama + Forge deployment and optimization |
 | [Hardware Specifications](docs/Dell_T5820_Hardware.md) | Dell T5820 hardware details |
 
 ---
@@ -326,6 +402,7 @@ services:
 - **Quantization matters** - Q4 quantization allows larger models with minimal quality loss
 - **Thermal management** - Monitor GPU temperature during extended inference sessions
 - **Storage speed** - NVMe recommended for fast model loading (especially 19GB+ models)
+- **Sharing the GPU** - Ollama and Forge coexist fine, but their VRAM *adds up*. Unload large LLMs (`docker exec ollama ollama stop <model>`) before running FLUX
 
 ---
 
@@ -348,6 +425,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Ollama](https://ollama.ai/) - Simplified local LLM deployment
+- [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) - Image generation UI & API
 - [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) - GPU support in Docker
 
 **Model Providers:**
@@ -365,6 +443,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [HuggingFace](https://huggingface.co/) - SmolLM2
 - [Allen Institute for AI](https://allenai.org/) - OLMo2
 - [All Hands AI](https://www.all-hands.dev/) - Devstral (with Mistral AI)
+
+**Image Model Providers:**
+- [Stability AI](https://stability.ai/) - SDXL
+- [Black Forest Labs](https://blackforestlabs.ai/) - FLUX.1 schnell
 
 ---
 
