@@ -1,0 +1,22 @@
+[Unit]
+Description=LLM stack (ollama + forge) via docker compose
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=llmuser
+WorkingDirectory=/home/llmuser/llm_on_rtx_3090/llm-docker
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.forge.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.forge.yml stop
+
+# A container that fails at task-creation (e.g. an NVIDIA driver upgrade with no
+# reboot yet) is parked in "Created" and no restart policy will ever retry it.
+# Re-running `up -d` at boot is what recovers it.
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target
