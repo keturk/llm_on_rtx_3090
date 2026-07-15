@@ -1,0 +1,352 @@
+<style>
+  :root {
+    color-scheme: light;
+    --page:        #eceef0;
+    --surface:     #fcfcfd;
+    --ink:         #0c0e12;
+    --secondary:   #4d5158;
+    --muted:       #878b92;
+    --hair:        #e2e4e8;
+    --hair-strong: #cfd2d8;
+    --s3090:       #2a78d6;  /* RTX 3090 — blue */
+    --s3090-soft:  #eaf1fb;
+    --gx10:        #eb6834;  /* GX10 — orange */
+    --gx10-soft:   #fdeee7;
+    --won-t:       #b7003b;  /* "won't fit" accent */
+    --shadow:      0 1px 2px rgba(12,14,18,.06), 0 12px 32px -12px rgba(12,14,18,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:        #0b0c0e;
+      --surface:     #16181c;
+      --ink:         #f4f5f7;
+      --secondary:   #b7bcc4;
+      --muted:       #7f848c;
+      --hair:        #26292e;
+      --hair-strong: #34383e;
+      --s3090:       #3987e5;
+      --s3090-soft:  #142334;
+      --gx10:        #e8703f;
+      --gx10-soft:   #2c1c13;
+      --won-t:       #ff5c86;
+      --shadow:      0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:        #0b0c0e;
+    --surface:     #16181c;
+    --ink:         #f4f5f7;
+    --secondary:   #b7bcc4;
+    --muted:       #7f848c;
+    --hair:        #26292e;
+    --hair-strong: #34383e;
+    --s3090:       #3987e5;
+    --s3090-soft:  #142334;
+    --gx10:        #e8703f;
+    --gx10-soft:   #2c1c13;
+    --won-t:       #ff5c86;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 18px 40px -14px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, color-mix(in srgb, var(--s3090) 8%, transparent), transparent 60%),
+      radial-gradient(1000px 600px at 100% 0%, color-mix(in srgb, var(--gx10) 7%, transparent), transparent 55%),
+      var(--page);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    padding: clamp(16px, 4vw, 44px);
+  }
+  .card {
+    max-width: 880px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .pad { padding: clamp(20px, 4vw, 40px); }
+
+  /* ---- header ---- */
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-size: clamp(29px, 5.4vw, 46px);
+    line-height: 1.02;
+    letter-spacing: -.028em;
+    font-weight: 800;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h1 .amp { color: var(--muted); font-weight: 500; }
+  .dek {
+    margin: 14px 0 0;
+    max-width: 62ch;
+    font-size: clamp(15px, 2.1vw, 17px);
+    color: var(--secondary);
+  }
+  .dek b { color: var(--ink); font-weight: 650; }
+
+  /* ---- machine legend ---- */
+  .machines {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 26px;
+  }
+  @media (max-width: 560px) { .machines { grid-template-columns: 1fr; } }
+  .machine {
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+    padding: 13px 15px;
+    background: var(--page);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; margin-top: 5px; flex: none; }
+  .swatch.s3090 { background: var(--s3090); }
+  .swatch.gx10  { background: var(--gx10); }
+  .machine .name { font-weight: 700; font-size: 15px; letter-spacing: -.01em; }
+  .machine .spec {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; color: var(--secondary); margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- chart ---- */
+  .chart-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin: 34px 0 6px; flex-wrap: wrap;
+  }
+  .chart-head h2 { font-size: 15px; margin: 0; letter-spacing: -.01em; }
+  .chart-head .axis {
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11px; color: var(--muted); letter-spacing: .04em;
+  }
+  .chart { border-top: 1px solid var(--hair); }
+  .row {
+    display: grid;
+    grid-template-columns: 148px 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--hair);
+  }
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 108px 1fr; gap: 11px; }
+  }
+  .m-name {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 600; font-size: 13.5px; letter-spacing: -.02em;
+  }
+  .m-sub { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+  .m-sub .x {
+    color: var(--gx10); font-weight: 700;
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .bars { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+  .bar { display: flex; align-items: center; gap: 9px; }
+  .fill {
+    height: 15px; border-radius: 5px; flex: none;
+    min-width: 3px;
+    transform-origin: left center;
+  }
+  .fill.s3090 { background: linear-gradient(90deg, var(--s3090), color-mix(in srgb, var(--s3090) 82%, #fff)); }
+  .fill.gx10  { background: linear-gradient(90deg, var(--gx10),  color-mix(in srgb, var(--gx10) 82%, #fff)); }
+  .val {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px; font-variant-numeric: tabular-nums;
+    color: var(--ink); font-weight: 600; white-space: nowrap;
+  }
+  .val .u { color: var(--muted); font-weight: 400; font-size: 10.5px; }
+  .nofit {
+    display: inline-flex; align-items: center; gap: 7px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11.5px; color: var(--won-t);
+    border: 1px dashed color-mix(in srgb, var(--won-t) 45%, transparent);
+    border-radius: 999px; padding: 2px 10px;
+  }
+
+  .row.flip { padding-top: 18px; }
+  .flip-note {
+    grid-column: 1 / -1;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 4px;
+  }
+  .flip-note::after { content: ""; flex: 1; height: 1px; background: var(--hair-strong); }
+
+  /* ---- verdict ---- */
+  .verdict { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 30px; }
+  @media (max-width: 560px) { .verdict { grid-template-columns: 1fr; } }
+  .v {
+    border: 1px solid var(--hair); border-radius: 14px; padding: 18px 18px 19px;
+    background: var(--page); position: relative;
+  }
+  .v::before {
+    content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px;
+    border-radius: 3px;
+  }
+  .v.a::before { background: var(--s3090); }
+  .v.b::before { background: var(--gx10); }
+  .v h3 {
+    margin: 0 0 4px; font-size: 15px; letter-spacing: -.01em;
+    padding-left: 12px;
+  }
+  .v .lead { padding-left: 12px; font-size: 13px; color: var(--secondary); margin: 0 0 10px; }
+  .v ul { margin: 0; padding-left: 12px; list-style: none; }
+  .v li { font-size: 13.5px; padding: 3px 0 3px 20px; position: relative; }
+  .v li::before {
+    content: ""; position: absolute; left: 2px; top: 10px;
+    width: 6px; height: 6px; border-radius: 2px;
+  }
+  .v.a li::before { background: var(--s3090); }
+  .v.b li::before { background: var(--gx10); }
+  .v .kbd {
+    font-family: ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+
+  /* ---- footer ---- */
+  .foot {
+    border-top: 1px solid var(--hair);
+    padding: 16px clamp(20px,4vw,40px);
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 11px; color: var(--muted); letter-spacing: .02em;
+  }
+  .foot a { color: var(--secondary); text-decoration: none; }
+  .foot a:hover { color: var(--ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .fill { animation: grow .7s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  }
+</style>
+
+<div class="card">
+  <div class="pad">
+    <p class="eyebrow">Local LLM benchmark · Ollama eval rate</p>
+    <h1>Bandwidth <span class="amp">vs</span> Capacity</h1>
+    <p class="dek">
+      Two NVIDIA machines, same models, same measurement. For anything that fits in 24&nbsp;GB the
+      <b>RTX&nbsp;3090 is 3–5× faster</b> — the gap tracks memory bandwidth. But the
+      <b>GB10 runs a 120B model the 3090 can't even load</b>. Pick by the job, not the spec sheet.
+    </p>
+
+    <div class="machines">
+      <div class="machine">
+        <span class="swatch s3090"></span>
+        <div>
+          <div class="name">Dell T5820 · RTX 3090</div>
+          <div class="spec">24 GB GDDR6X · 936 GB/s · x86</div>
+        </div>
+      </div>
+      <div class="machine">
+        <span class="swatch gx10"></span>
+        <div>
+          <div class="name">ASUS GX10 · NVIDIA GB10</div>
+          <div class="spec">128 GB unified · ~273 GB/s · ARM</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-head">
+      <h2>Generation speed, tokens / sec</h2>
+      <span class="axis">scale 0 → 200 · higher is better</span>
+    </div>
+
+    <div class="chart">
+      <!-- fitting models, small → large -->
+      <div class="row">
+        <div><div class="m-name">Llama 3.2</div><div class="m-sub">3B · 3090 <span class="x">3.4×</span></div></div>
+        <div class="bars">
+          <div class="bar" title="RTX 3090 — 196 tok/s"><span class="fill s3090" style="width:98.0%"></span><span class="val">196<span class="u"> t/s</span></span></div>
+          <div class="bar" title="GX10 — 57 tok/s"><span class="fill gx10" style="width:28.7%"></span><span class="val">57<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div><div class="m-name">Llama 3.1</div><div class="m-sub">8B · 3090 <span class="x">4.3×</span></div></div>
+        <div class="bars">
+          <div class="bar" title="RTX 3090 — 121 tok/s"><span class="fill s3090" style="width:60.6%"></span><span class="val">121<span class="u"> t/s</span></span></div>
+          <div class="bar" title="GX10 — 28 tok/s"><span class="fill gx10" style="width:14.1%"></span><span class="val">28<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div><div class="m-name">Phi-3</div><div class="m-sub">14B · 3090 <span class="x">4.8×</span></div></div>
+        <div class="bars">
+          <div class="bar" title="RTX 3090 — 92 tok/s"><span class="fill s3090" style="width:45.9%"></span><span class="val">92<span class="u"> t/s</span></span></div>
+          <div class="bar" title="GX10 — 19 tok/s"><span class="fill gx10" style="width:9.6%"></span><span class="val">19<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div><div class="m-name">Gemma 2</div><div class="m-sub">27B · 3090 <span class="x">5.1×</span></div></div>
+        <div class="bars">
+          <div class="bar" title="RTX 3090 — 43 tok/s"><span class="fill s3090" style="width:21.7%"></span><span class="val">43<span class="u"> t/s</span></span></div>
+          <div class="bar" title="GX10 — 8.5 tok/s"><span class="fill gx10" style="width:4.3%"></span><span class="val">8.5<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div><div class="m-name">CodeLlama</div><div class="m-sub">34B · 3090 <span class="x">5.4×</span></div></div>
+        <div class="bars">
+          <div class="bar" title="RTX 3090 — 42 tok/s"><span class="fill s3090" style="width:20.9%"></span><span class="val">42<span class="u"> t/s</span></span></div>
+          <div class="bar" title="GX10 — 7.8 tok/s"><span class="fill gx10" style="width:3.9%"></span><span class="val">7.8<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+
+      <!-- capability flip -->
+      <div class="row flip">
+        <div class="flip-note">Where it flips — too big for 24 GB</div>
+        <div><div class="m-name">Nemotron-3</div><div class="m-sub">120B · unified mem only</div></div>
+        <div class="bars">
+          <div class="bar"><span class="nofit">✗ won't fit on 24 GB</span></div>
+          <div class="bar" title="GX10 — 13 tok/s"><span class="fill gx10" style="width:6.6%"></span><span class="val">13<span class="u"> t/s</span></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="v a">
+        <h3>Reach for the RTX 3090</h3>
+        <p class="lead">Raw speed on models that fit.</p>
+        <ul>
+          <li>Fast small/mid models, 3–34B</li>
+          <li>High-throughput / many requests</li>
+          <li>Image generation (SDXL, FLUX)</li>
+          <li><span class="kbd">3–5×</span> the tokens/sec, ≤ 24 GB</li>
+        </ul>
+      </div>
+      <div class="v b">
+        <h3>Reach for the GX10 (GB10)</h3>
+        <p class="lead">Capacity a 24 GB card can't touch.</p>
+        <ul>
+          <li>70B–120B models, run whole</li>
+          <li>Large context windows</li>
+          <li>Private, compact, low-power</li>
+          <li>The only one that <span class="kbd">loads them at all</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Method: Ollama <b style="color:var(--secondary)">--verbose</b> eval rate · load time excluded · identical on both machines</span>
+    <a href="https://github.com/keturk/llm_on_rtx_3090">github.com/keturk/llm_on_rtx_3090</a>
+  </div>
+</div>
