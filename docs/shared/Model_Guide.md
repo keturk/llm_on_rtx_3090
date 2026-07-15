@@ -216,7 +216,7 @@ nvidia-smi
 
 - **[Models_and_Benchmarks.md](Models_and_Benchmarks.md)** - Complete benchmark data, detailed model analysis, technical specifications
 - **[Benchmark_Automation.md](Benchmark_Automation.md)** - Automated benchmarking workflow
-- **[Install.md](Install.md)** - Installation walkthrough
+- **[Install.md](../machines/t5820/Install.md)** - Installation walkthrough (T5820)
 
 ---
 

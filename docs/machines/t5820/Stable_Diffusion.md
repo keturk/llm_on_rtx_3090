@@ -225,6 +225,6 @@ Full interactive API docs: http://localhost:7860/docs
 
 ## Related
 
-- [Model Guide](Model_Guide.md) — LLM selection
-- [Models & Benchmarks](Models_and_Benchmarks.md) — LLM benchmark data
-- [LLM Inference Setup](LLM_Inference_Setup.md) — Ollama/Docker configuration
+- [Model Guide](../../shared/Model_Guide.md) — LLM selection
+- [Models & Benchmarks](../../shared/Models_and_Benchmarks.md) — LLM benchmark data
+- [LLM Inference Setup](Inference_Setup.md) — Ollama/Docker configuration

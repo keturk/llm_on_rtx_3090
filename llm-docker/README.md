@@ -105,7 +105,7 @@ docker exec -it ollama ollama list
 └── flux1-schnell-fp8.safetensors     # 17.2 GB, ~17 GB VRAM
 ```
 
-📖 [Full Stable Diffusion Guide](../docs/Stable_Diffusion.md)
+📖 [Full Stable Diffusion Guide](../docs/machines/t5820/Stable_Diffusion.md)
 
 ---
 
@@ -215,7 +215,7 @@ docker compose restart ollama
 ./scripts/run-full-benchmark.sh --skip-pull -y
 ```
 
-**For detailed benchmarking guide:** See [../docs/Benchmark_Automation.md](../docs/Benchmark_Automation.md)
+**For detailed benchmarking guide:** See [../docs/shared/Benchmark_Automation.md](../docs/shared/Benchmark_Automation.md)
 
 ---
 
@@ -263,17 +263,21 @@ curl http://localhost:8000/v1/completions \
 - **[CHEATSHEET.txt](CHEATSHEET.txt)** - Command reference card
 - **[../QUICK_START.md](../QUICK_START.md)** - 5-minute setup guide
 
+> **Note:** this `llm-docker/` deployment is the **Dell T5820 (Docker)** path. On the ASUS GX10,
+> Ollama runs natively — see [../docs/machines/gx10/](../docs/machines/gx10/README.md) and
+> [../docs/MACHINES.md](../docs/MACHINES.md).
+
 ### Comprehensive Guides
-- **[../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)** - Model selection & performance data
-- **[../docs/Stable_Diffusion.md](../docs/Stable_Diffusion.md)** - 🎨 Image generation (Forge, checkpoints, VRAM sharing)
-- **[../docs/Benchmark_Automation.md](../docs/Benchmark_Automation.md)** - Automated benchmarking guide
-- **[../docs/LLM_System_Setup.md](../docs/LLM_System_Setup.md)** - System prerequisites & driver setup
-- **[../docs/LLM_Inference_Setup.md](../docs/LLM_Inference_Setup.md)** - Docker, Ollama & Forge configuration
-- **[../docs/Install.md](../docs/Install.md)** - Installation walkthrough
+- **[../docs/shared/Models_and_Benchmarks.md](../docs/shared/Models_and_Benchmarks.md)** - Model selection & performance data
+- **[../docs/machines/t5820/Stable_Diffusion.md](../docs/machines/t5820/Stable_Diffusion.md)** - 🎨 Image generation (Forge, checkpoints, VRAM sharing)
+- **[../docs/shared/Benchmark_Automation.md](../docs/shared/Benchmark_Automation.md)** - Automated benchmarking guide
+- **[../docs/machines/t5820/System_Setup.md](../docs/machines/t5820/System_Setup.md)** - System prerequisites & driver setup
+- **[../docs/machines/t5820/Inference_Setup.md](../docs/machines/t5820/Inference_Setup.md)** - Docker, Ollama & Forge configuration
+- **[../docs/machines/t5820/Install.md](../docs/machines/t5820/Install.md)** - Installation walkthrough
 
 ### Configuration References
-- **[../docs/Model_Guide.md](../docs/Model_Guide.md)** - Model testing strategy
-- **[../docs/Dell_T5820_Hardware.md](../docs/Dell_T5820_Hardware.md)** - Hardware specifications
+- **[../docs/shared/Model_Guide.md](../docs/shared/Model_Guide.md)** - Model testing strategy
+- **[../docs/machines/t5820/Hardware.md](../docs/machines/t5820/Hardware.md)** - Hardware specifications
 
 ---
 
@@ -360,7 +364,7 @@ sudo lsof -i :11434
 | **Vision** | qwen3-vl:8b | ~7GB | 40.9 tok/s |
 | **Multilingual** | aya-expanse:8b | ~6GB | 32.0 tok/s |
 
-**See full 48-model benchmark:** [../docs/Models_and_Benchmarks.md](../docs/Models_and_Benchmarks.md)
+**See full 48-model benchmark:** [../docs/shared/Models_and_Benchmarks.md](../docs/shared/Models_and_Benchmarks.md)
 
 ---
 

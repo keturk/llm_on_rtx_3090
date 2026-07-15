@@ -854,7 +854,7 @@ For detailed benchmarking guide, see [Benchmark_Automation.md](Benchmark_Automat
 
 - **[Model_Guide.md](Model_Guide.md)** - Quick model selection guide (start here for fast decisions)
 - **[Benchmark_Automation.md](Benchmark_Automation.md)** - Automated benchmarking workflow
-- **[Install.md](Install.md)** - Installation walkthrough
+- **[Install.md](../machines/t5820/Install.md)** - Installation walkthrough (T5820)
 
 ---
 
@@ -862,7 +862,7 @@ For detailed benchmarking guide, see [Benchmark_Automation.md](Benchmark_Automat
 **Hardware:** Dell T5820 + RTX 3090 (24GB)
 **Models Documented:** 59 total (1.7B to 35B parameters)
 **Last Benchmark Run:** January 16, 2026 19:32:55 PST
-**Benchmark Results:** [benchmark_20260116_193255.md](../llm-docker/benchmark_results/benchmark_20260116_193255.md)
+**Benchmark Results:** [benchmark_20260116_193255.md](../../llm-docker/benchmark_results/benchmark_20260116_193255.md)
 **Methodology:** Automated comprehensive benchmark suite with 5 diverse prompts per model (simple, reasoning, coding, creative, math)
 
 ### New in July 2026
@@ -891,4 +891,4 @@ For detailed benchmarking guide, see [Benchmark_Automation.md](Benchmark_Automat
 
 - [Ollama Models Library](https://ollama.com/library)
 - [Model_Guide.md](Model_Guide.md) - Model selection guide
-- [Latest Benchmark Results](../llm-docker/benchmark_results/)
+- [Latest Benchmark Results](../../llm-docker/benchmark_results/)

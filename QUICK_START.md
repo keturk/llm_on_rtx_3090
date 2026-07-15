@@ -1,6 +1,33 @@
-# LLM on RTX 3090 - Quick Start
+# Quick Start
 
-Get up and running with LLMs on your RTX 3090 in under 5 minutes.
+Get up and running with local LLMs in under 5 minutes.
+
+> **Which machine?** This repo supports two. Run `./setup.sh` from the repo root — it detects
+> your machine and points you the right way. Full comparison: [docs/MACHINES.md](docs/MACHINES.md).
+>
+> - **ASUS GX10 (ARM, native Ollama)** → jump to [GX10 Quick Start](#gx10-quick-start-arm--native) below.
+> - **Dell T5820 (x86, RTX 3090, Docker)** → continue with the sections below.
+
+---
+
+## GX10 Quick Start (ARM / native)
+
+On the GX10, Ollama already runs as a native systemd service — no Docker, no `docker exec`.
+
+```bash
+cd ~/llm_on_rtx_3090
+./setup.sh                                    # verify the environment
+
+ollama list                                   # installed models (stored in /opt/models)
+ollama run nemotron-3-nano:30b "Hello!"       # 30B model
+ollama run nemotron-3-super:120b "Explain unified memory"   # 120B — fits in unified RAM!
+ollama pull qwen3:14b                          # download another model
+```
+
+The server listens on **port 11500** (`http://127.0.0.1:11500`); the default `ollama` CLI works
+without any host flag. Full details: [GX10 Setup guide](docs/machines/gx10/Setup.md).
+
+The rest of this document is the **Dell T5820 / RTX 3090 (Docker)** path.
 
 ---
 
@@ -14,7 +41,7 @@ nvidia-smi
 docker run --rm --gpus all nvidia/cuda:12.1.0-base-ubuntu22.04 nvidia-smi
 ```
 
-If either command fails, see [docs/LLM_System_Setup.md](docs/LLM_System_Setup.md) for full setup.
+If either command fails, see [docs/machines/t5820/System_Setup.md](docs/machines/t5820/System_Setup.md) for full setup.
 
 ---
 
@@ -118,7 +145,7 @@ Then hit the **🔄 refresh** button next to the checkpoint dropdown in the UI.
 > ⚠️ Running FLUX (~17 GB) plus a large LLM will exceed 24 GB. Free the LLM first:
 > `docker exec ollama ollama stop <model>`
 
-📖 [Full Stable Diffusion Guide](docs/Stable_Diffusion.md)
+📖 [Full Stable Diffusion Guide](docs/machines/t5820/Stable_Diffusion.md)
 
 ---
 
@@ -153,7 +180,7 @@ watch -n 1 nvidia-smi
 
 ## Next Steps
 
-1. **Try More Models:** See [docs/Models_and_Benchmarks.md](docs/Models_and_Benchmarks.md) for recommendations
+1. **Try More Models:** See [docs/shared/Models_and_Benchmarks.md](docs/shared/Models_and_Benchmarks.md) for recommendations
 2. **Run Benchmarks:** Use `./scripts/run-full-benchmark.sh` to test performance
 3. **Read Full Guide:** Check [llm-docker/README.md](llm-docker/README.md) for detailed usage
 

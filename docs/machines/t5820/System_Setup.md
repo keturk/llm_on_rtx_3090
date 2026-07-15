@@ -562,7 +562,7 @@ Run with: `~/check-system.sh`
 
 ## What's Next
 
-This base system is now ready for inference engine configuration. Proceed to the **[LLM Inference Setup Guide](LLM_Inference_Setup.md)** for:
+This base system is now ready for inference engine configuration. Proceed to the **[LLM Inference Setup Guide](Inference_Setup.md)** for:
 
 - Docker Compose configuration for Ollama
 - GPU optimization and troubleshooting

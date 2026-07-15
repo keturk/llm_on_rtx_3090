@@ -11,7 +11,7 @@ a single GPU
 
 ## Prerequisites
 
-**Important:** This guide assumes you have completed the **[LLM System Setup Guide](LLM_System_Setup.md)** which includes:
+**Important:** This guide assumes you have completed the **[LLM System Setup Guide](System_Setup.md)** which includes:
 
 - ✓ Ubuntu 24.04.3 LTS installation
 - ✓ NVIDIA 570-open driver (570.195.03)

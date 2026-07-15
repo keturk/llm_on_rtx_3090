@@ -22,7 +22,23 @@ This repository provides a complete, production-ready setup for running large la
 
 ---
 
-## 🖥️ Reference Hardware
+## 🖥️ Supported Machines
+
+This repo now covers **two** very different NVIDIA machines. Run `./setup.sh` and it auto-detects
+which one you're on. Full side-by-side comparison: **[docs/MACHINES.md](docs/MACHINES.md)**.
+
+| Machine | Arch | GPU / Memory | Ollama | Max model | Guide |
+|---------|------|--------------|--------|-----------|-------|
+| **Dell T5820** (reference) | x86-64 | RTX 3090, 24 GB **discrete** | Docker | ~32B | [machines/t5820/](docs/machines/t5820/README.md) |
+| **ASUS Ascent GX10** 🆕 | ARM | GB10 Blackwell, 128 GB **unified** | Native (systemd) | **~120B** | [machines/gx10/](docs/machines/gx10/README.md) |
+
+> Everything below (benchmarks, model tables, Stable Diffusion) was developed on the **T5820 /
+> RTX 3090**. The GX10 trades bandwidth for capacity — it runs 70B–120B models the 3090 cannot
+> hold, using native Ollama on ARM. See its [Setup guide](docs/machines/gx10/Setup.md).
+
+---
+
+## 🖥️ Reference Hardware (Dell T5820)
 
 This guide was developed and tested on:
 
@@ -44,17 +60,27 @@ OS:      Ubuntu 24.04.3 LTS
 llm_on_rtx_3090/
 ├── README.md                          # You are here
 ├── QUICK_START.md                     # 🚀 5-minute setup guide (start here!)
+├── setup.sh                           # 🔎 Machine-detecting setup/verify entry point
 ├── LICENSE                            # MIT License
 ├── docs/
-│   ├── Model_Guide.md                 # 🎯 Quick model selection guide (start here!)
-│   ├── Models_and_Benchmarks.md       # 📊 Complete benchmark analysis & model details
-│   ├── Stable_Diffusion.md            # 🎨 Image generation (SD WebUI Forge)
-│   ├── Benchmark_Automation.md        # 🤖 Automated benchmark workflow
-│   ├── Install.md                     # 💿 Installation walkthrough
-│   ├── LLM_System_Setup.md            # System prerequisites & drivers
-│   ├── LLM_Inference_Setup.md         # Docker, Ollama & Forge configuration
-│   └── Dell_T5820_Hardware.md         # Hardware specifications
-└── llm-docker/
+│   ├── MACHINES.md                    # 🖥️ Machine comparison & how to pick a path
+│   ├── shared/                        # Machine-independent references
+│   │   ├── Model_Guide.md             # 🎯 Quick model selection guide (start here!)
+│   │   ├── Models_and_Benchmarks.md   # 📊 Benchmark analysis (measured on RTX 3090)
+│   │   └── Benchmark_Automation.md    # 🤖 Automated benchmark workflow
+│   └── machines/
+│       ├── t5820/                     # Dell T5820 + RTX 3090 (x86, Docker)
+│       │   ├── README.md              #    Machine landing page
+│       │   ├── Hardware.md            #    Hardware specifications
+│       │   ├── System_Setup.md        #    Drivers, Docker, NVIDIA toolkit, NVMe
+│       │   ├── Inference_Setup.md     #    Ollama (Docker) + Forge configuration
+│       │   ├── Install.md             #    Installation walkthrough
+│       │   └── Stable_Diffusion.md    #    🎨 Image generation (SD WebUI Forge)
+│       └── gx10/                      # ASUS GX10 + GB10 (ARM, native Ollama) 🆕
+│           ├── README.md              #    Machine landing page
+│           ├── Hardware.md            #    GB10 / unified-memory specs
+│           └── Setup.md               #    Native Ollama (systemd) on ARM
+└── llm-docker/                        # T5820 Docker deployment (compose, scripts)
     ├── README.md                      # Quick reference & commands
     ├── CHEATSHEET.txt                 # Quick command reference
     ├── .env                           # Environment configuration
@@ -83,10 +109,16 @@ llm_on_rtx_3090/
 ## 🚀 Quick Start
 
 > **New User?** See [QUICK_START.md](QUICK_START.md) for a 5-minute setup guide!
+>
+> **On the ASUS GX10 (ARM)?** Ollama runs natively there, not in Docker — skip the steps below
+> and follow the [GX10 Setup guide](docs/machines/gx10/Setup.md) instead. Or just run
+> `./setup.sh`, which detects your machine.
+
+> The steps below are the **Dell T5820 / RTX 3090 (Docker)** path.
 
 ### 1. Complete System Setup
 
-Follow the [LLM System Setup Guide](docs/LLM_System_Setup.md) to configure:
+Follow the [LLM System Setup Guide](docs/machines/t5820/System_Setup.md) to configure:
 - NVIDIA 570-open driver installation
 - Docker Engine with NVIDIA Container Toolkit
 - NVMe drive mounting and directory structure
@@ -94,7 +126,7 @@ Follow the [LLM System Setup Guide](docs/LLM_System_Setup.md) to configure:
 
 ### 2. Deploy Ollama
 
-Follow the [LLM Inference Setup Guide](docs/LLM_Inference_Setup.md) to:
+Follow the [LLM Inference Setup Guide](docs/machines/t5820/Inference_Setup.md) to:
 - Configure Docker Compose for GPU inference
 - Pull and test models
 - Benchmark performance
@@ -132,7 +164,7 @@ nvidia-smi
 # Open http://localhost:7860
 ```
 
-See the [Stable Diffusion Guide](docs/Stable_Diffusion.md) for checkpoint downloads and
+See the [Stable Diffusion Guide](docs/machines/t5820/Stable_Diffusion.md) for checkpoint downloads and
 VRAM budgeting.
 
 ---
@@ -202,7 +234,7 @@ Tested on RTX 3090 (24GB VRAM) - **59 models documented** (July 2026):
 
 🆕 = New in 2025 update | 🆕🆕 = New in July 2026 update
 
-📈 **[Full Model Guide & Benchmarks →](docs/Models_and_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
+📈 **[Full Model Guide & Benchmarks →](docs/shared/Models_and_Benchmarks.md)** - Complete model selection guide with task-specific recommendations, quantization analysis, and thermal data.
 
 ---
 
@@ -330,7 +362,7 @@ SDXL and FLUX need **different** settings — reusing SDXL's for FLUX produces g
 | Steps | 25-30 | **4** (distilled — more is worse) |
 | CFG | 6-7 | 1.0 |
 
-🎨 **[Full Stable Diffusion Guide →](docs/Stable_Diffusion.md)** — checkpoints, LoRAs, API usage, VRAM tuning, and build troubleshooting.
+🎨 **[Full Stable Diffusion Guide →](docs/machines/t5820/Stable_Diffusion.md)** — checkpoints, LoRAs, API usage, VRAM tuning, and build troubleshooting.
 
 ---
 
@@ -385,14 +417,28 @@ services:
 ### Comprehensive Guides
 | Document | Description |
 |----------|-------------|
-| [**Model Selection Guide**](docs/Model_Guide.md) | **🎯 Which model should I use? (start here!)** |
-| [**Models & Benchmarks**](docs/Models_and_Benchmarks.md) | **📊 Complete benchmark analysis & detailed model info** |
-| [**Stable Diffusion Guide**](docs/Stable_Diffusion.md) | **🎨 Image generation — Forge, checkpoints, VRAM sharing** |
-| [Benchmark Automation](docs/Benchmark_Automation.md) | Automated benchmarking workflow |
-| [Installation Guide](docs/Install.md) | Step-by-step installation walkthrough |
-| [LLM System Setup](docs/LLM_System_Setup.md) | Complete OS and driver configuration |
-| [LLM Inference Setup](docs/LLM_Inference_Setup.md) | Ollama + Forge deployment and optimization |
-| [Hardware Specifications](docs/Dell_T5820_Hardware.md) | Dell T5820 hardware details |
+| [**Machine Comparison**](docs/MACHINES.md) | **🖥️ T5820 vs GX10 — which path to follow** |
+| [**Model Selection Guide**](docs/shared/Model_Guide.md) | **🎯 Which model should I use? (start here!)** |
+| [**Models & Benchmarks**](docs/shared/Models_and_Benchmarks.md) | **📊 Benchmark analysis & detailed model info (RTX 3090)** |
+| [Benchmark Automation](docs/shared/Benchmark_Automation.md) | Automated benchmarking workflow |
+
+### Dell T5820 (RTX 3090, Docker)
+| Document | Description |
+|----------|-------------|
+| [T5820 Guide](docs/machines/t5820/README.md) | Machine landing page |
+| [**Stable Diffusion Guide**](docs/machines/t5820/Stable_Diffusion.md) | **🎨 Image generation — Forge, checkpoints, VRAM sharing** |
+| [Installation Guide](docs/machines/t5820/Install.md) | Step-by-step installation walkthrough |
+| [LLM System Setup](docs/machines/t5820/System_Setup.md) | Complete OS and driver configuration |
+| [LLM Inference Setup](docs/machines/t5820/Inference_Setup.md) | Ollama + Forge deployment and optimization |
+| [Hardware Specifications](docs/machines/t5820/Hardware.md) | Dell T5820 hardware details |
+
+### ASUS GX10 (GB10, native Ollama) 🆕
+| Document | Description |
+|----------|-------------|
+| [GX10 Guide](docs/machines/gx10/README.md) | Machine landing page |
+| [GX10 Setup](docs/machines/gx10/Setup.md) | Native Ollama (systemd) on ARM, big models |
+| [GX10 Benchmarks](docs/machines/gx10/Benchmarks.md) | Throughput + head-to-head vs. RTX 3090 |
+| [Hardware Specifications](docs/machines/gx10/Hardware.md) | GB10 / unified-memory details |
 
 ---
 
