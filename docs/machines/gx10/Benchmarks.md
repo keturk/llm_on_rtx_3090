@@ -38,14 +38,14 @@ The two machines were **not** measured identically, so compare with care:
 |---|---|---|
 | Script | `llm-docker/scripts/comprehensive-benchmark.sh` | `scripts/benchmark-native.sh` |
 | Runtime | Ollama in Docker | native Ollama |
-| tok/s source | `words × 1.3 ÷ wall-clock` (**estimate**, includes model load) | `ollama --verbose` **`eval rate`** (**accurate**, excludes load) |
+| tok/s source | `ollama --verbose` **`eval rate`** (accurate, excludes load) | same |
 | Prompt | "explain supervised vs unsupervised… in 3 sentences" | same |
 
-The GX10 method is strictly more accurate. The 3090's estimate tends to **under**-report (wall
-clock includes load time and token counts are approximate). So a small GX10 advantage may be
-partly methodology, not hardware — treat differences under ~15% as noise. For a truly clean
-comparison, re-run the 3090 with `--verbose` parsing too (a future improvement to the Docker
-script).
+**Both machines are now measured with the identical accurate method** (`scripts/benchmark.sh`,
+which auto-detects Docker vs native). The numbers below are directly comparable. (An earlier
+RTX 3090 table used a crude `words × 1.3 ÷ wall-clock` estimate that badly under-reported —
+e.g. it put llama3.2:3b at 48 tok/s when the real eval rate is ~196; those old figures are
+superseded.)
 
 ### What to expect on the GX10
 
@@ -63,21 +63,31 @@ script).
 
 ### Comparison set (fits on RTX 3090)
 
-> Run `./scripts/benchmark-native.sh compare --pull` and paste the generated table here.
-> The RTX 3090 column is pre-filled from the T5820 reference run.
+Both columns measured with `scripts/benchmark.sh` (accurate `eval rate`). Raw files:
+GX10 [`gx10_benchmark_20260715_000327.md`](../../../benchmark_results/gx10_benchmark_20260715_000327.md),
+T5820 [`t5820_benchmark_20260714_234234.md`](../../../benchmark_results/t5820_benchmark_20260714_234234.md).
 
-| Model | Size | GX10 tok/s | RTX 3090 tok/s | Fits 3090? |
-|-------|------|-----------:|---------------:|:----------:|
-| llama3.2:3b | ~3 GB | _TBD_ | 48.3 | ✅ |
-| llama3.1:8b | ~6 GB | _TBD_ | 47.1 | ✅ |
-| mistral:7b | ~5 GB | _TBD_ | 65.3 | ✅ |
-| qwen2.5:7b | ~5 GB | _TBD_ | 30.5 | ✅ |
-| phi3:14b | ~9 GB | _TBD_ | 31.7 | ✅ |
-| qwen2.5:14b | ~10 GB | _TBD_ | 25.1 | ✅ |
-| gemma2:27b | ~17 GB | _TBD_ | 20.8 | ✅ |
-| qwen2.5:32b | ~20 GB | _TBD_ | 20.2 | ✅ |
-| codellama:34b | ~20 GB | _TBD_ | 22.4 | ✅ |
-| deepseek-coder:33b | ~20 GB | _TBD_ | 19.9 | ✅ |
+| Model | Size | GX10 tok/s | RTX 3090 tok/s | RTX 3090 is |
+|-------|------|-----------:|---------------:|:-----------:|
+| llama3.2:3b | 2.0 GB | 57.3 | 196.1 | 3.4× faster |
+| llama3.1:8b | 4.9 GB | 28.2 | 121.1 | 4.3× |
+| mistral:7b | 4.4 GB | 31.1 | 145.8 | 4.7× |
+| qwen2.5:7b | 4.7 GB | 29.8 | 122.1 | 4.1× |
+| phi3:14b | 7.9 GB | 19.2 | 91.8 | 4.8× |
+| qwen2.5:14b | 9.0 GB | _pending_ | 70.7 | — |
+| gemma2:27b | 15 GB | _pending_ | 43.3 | — |
+| qwen2.5:32b | 19 GB | _pending_ | 8.3 ⚠️ | — |
+| codellama:34b | 19 GB | _pending_ | 41.8 | — |
+| deepseek-coder:33b | 18 GB | _pending_ | 40.9 | — |
+
+The RTX 3090 is **3.4–4.8× faster** on every small/mid model that fits its 24 GB — closely
+tracking the memory-bandwidth ratio (936 ÷ 273 ≈ 3.4×), which is what bounds token generation.
+The GX10's advantage is capacity, not speed.
+
+> ⚠️ **`qwen2.5:32b` = 8.3 tok/s on the 3090 is an outlier** — slower than the larger 33–34B
+> models, which means it partially spilled to CPU near the 24 GB ceiling on that run. Re-run it
+> before quoting, or read it as "the 3090 starts hitting its wall around 32B." The GX10 (with
+> ~120 GB) has no such ceiling. _(GX10 rows for the 14B–34B tier are still being collected.)_
 
 ### Big models (GX10-only — will not fit on a 24 GB card)
 
