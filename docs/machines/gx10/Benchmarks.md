@@ -12,31 +12,33 @@ everything else.
 
 ## How to run it
 
+`scripts/benchmark.sh` auto-detects the runtime (native on the GX10, Docker on the T5820), so the
+same command measures either machine identically:
+
 ```bash
 cd ~/llm_on_rtx_3090
 
-# The comparison set (models with recorded RTX 3090 numbers). Pulls are ~90 GB total.
-./scripts/benchmark-native.sh compare --pull
+# The comparison set (models with recorded RTX 3090 numbers)
+./scripts/benchmark.sh compare --pull -y
 
-# Just the big, GX10-only models (already installed on this machine)
-./scripts/benchmark-native.sh big
+# Just the big, GX10-only models (30B / 120B)
+./scripts/benchmark.sh big
 
-# Everything
-./scripts/benchmark-native.sh all --pull -y
+# The complete 49-model suite (pulls each model on demand, benchmarks as it goes)
+./scripts/benchmark.sh full --pull -y
 ```
 
-Results are written to `benchmark_results/gx10_benchmark_<timestamp>.md` (tracked in git). Paste
-the resulting table into the [Results](#results) section below.
+Results are written to `benchmark_results/<machine>_benchmark_<timestamp>.md` (tracked in git).
 
 ---
 
-## Methodology — read this before comparing numbers
+## Methodology
 
-The two machines were **not** measured identically, so compare with care:
+Both machines are measured with the **identical** method — same script, same metric, same prompt:
 
 | | RTX 3090 (T5820) | GX10 |
 |---|---|---|
-| Script | `llm-docker/scripts/comprehensive-benchmark.sh` | `scripts/benchmark-native.sh` |
+| Script | `scripts/benchmark.sh` (auto-detects) | same |
 | Runtime | Ollama in Docker | native Ollama |
 | tok/s source | `ollama --verbose` **`eval rate`** (accurate, excludes load) | same |
 | Prompt | "explain supervised vs unsupervised… in 3 sentences" | same |
@@ -113,6 +115,101 @@ The headline result: a **120B model generates at ~13 tok/s** on this box — usa
 bandwidth-bound hardware, models that read fewer parameters per token (hybrid / MoE / SSM) win
 enormously. The 120B Nemotron beating dense 32B models (13 vs 7 tok/s) is the same effect. **On
 the GX10, pick the architecture, not just the size.**
+
+---
+
+## Full suite — all 49 models on the GX10
+
+The GX10 now mirrors the RTX 3090's model library. Complete native run:
+[`gx10_benchmark_20260716_002828.md`](../../../benchmark_results/gx10_benchmark_20260716_002828.md).
+Across the whole suite the dominant variable is **not size — it's architecture.**
+
+### Same size, opposite result
+
+Group models by parameter count and the split is stark: every **dense** model of a given size
+lands in the same narrow band, while **MoE / hybrid** models of the *same* size run multiples
+faster (fewer parameters read per token → less memory traffic on a ~273 GB/s bus).
+
+| Size | Dense (tok/s) | MoE / hybrid (tok/s) | Gap |
+|------|--------------|----------------------|-----|
+| ~3B | llama3.2:3b **50.6** · ministral-3:3b 52.9 | granite3.1-moe:3b **115.1** | ~2.2× |
+| ~30–32B | qwen2.5:32b **7.0** · deepseek-r1:32b 6.9 · qwq:32b 6.9 | qwen3:30b-a3b **53.5** · qwen3-coder:30b 50.8 · nemotron-3-nano:30b 47.1 | **~7.6×** |
+| 120B | _(nothing dense this size runs here)_ | nemotron-3-super:120b **13.2** | > any dense 32B |
+
+The kicker: **a 120B hybrid MoE (13 tok/s) is nearly 2× faster than any dense 32B model (~7 tok/s).**
+`granite3.1-moe:3b` tops the entire 49-model suite at **115 tok/s**.
+
+### Every dense model is bandwidth-bound
+
+Dense throughput falls off a cliff with size and clusters tightly at each tier — because
+generation reads *all* parameters every token:
+
+| Dense size tier | tok/s range |
+|-----------------|-------------|
+| 1.7–4B | 41–72 |
+| 7–9B | 25–32 |
+| 12–14B | 15–17 |
+| 22–27B | 8–11 |
+| 32–34B | **6.8–7.9** (six models, all within 1 tok/s) |
+
+<details>
+<summary><b>Full ranking — all 49 models, fastest first</b></summary>
+
+| # | Model | Size | Arch | GX10 tok/s |
+|--:|-------|------|------|-----------:|
+| 1 | granite3.1-moe:3b | 2.0 GB | MoE | 115.1 |
+| 2 | smollm2:1.7b | 1.8 GB | dense | 72.2 |
+| 3 | phi3.5 | 2.2 GB | dense | 58.7 |
+| 4 | qwen3:30b-a3b | 18 GB | MoE | 53.5 |
+| 5 | ministral-3:3b | 3.0 GB | dense | 52.9 |
+| 6 | qwen3-coder:30b | 18 GB | MoE | 50.8 |
+| 7 | llama3.2:3b | 2.0 GB | dense | 50.6 |
+| 8 | nemotron-mini:4b | 2.7 GB | dense | 47.3 |
+| 9 | nemotron-3-nano:30b | 24 GB | hybrid | 47.1 |
+| 10 | phi4-mini | 2.5 GB | dense | 47.1 |
+| 11 | gemma3:4b | 3.3 GB | dense | 41.6 |
+| 12 | hermes3:8b | 4.7 GB | dense | 32.0 |
+| 13 | mistral:7b | 4.4 GB | dense | 30.6 |
+| 14 | falcon3:7b | 4.6 GB | dense | 30.0 |
+| 15 | marco-o1:7b | 4.7 GB | dense | 29.6 |
+| 16 | exaone-deep:7.8b | 4.8 GB | dense | 29.4 |
+| 17 | qwen2.5:7b | 4.7 GB | dense | 29.3 |
+| 18 | dolphin3 | 4.9 GB | dense | 28.4 |
+| 19 | llama3.1:8b | 4.9 GB | dense | 27.8 |
+| 20 | glm4:9b | 5.5 GB | dense | 27.7 |
+| 21 | qwen3:8b | 5.2 GB | dense | 27.5 |
+| 22 | qwen3-vl:8b | 6.1 GB | dense | 27.0 |
+| 23 | deepseek-r1:8b | 5.2 GB | dense | 26.7 |
+| 24 | granite3-dense:8b | 4.9 GB | dense | 26.5 |
+| 25 | ministral-3:8b | 6.0 GB | dense | 25.8 |
+| 26 | aya-expanse:8b | 5.1 GB | dense | 25.3 |
+| 27 | falcon3:10b | 6.3 GB | dense | 21.7 |
+| 28 | phi3:14b | 7.9 GB | dense | 17.5 |
+| 29 | gemma3:12b | 8.1 GB | dense | 17.4 |
+| 30 | ministral-3:14b | 9.1 GB | dense | 16.6 |
+| 31 | olmo2:13b | 8.4 GB | dense | 16.3 |
+| 32 | deepseek-r1:14b | 9.0 GB | dense | 15.5 |
+| 33 | qwen3:14b | 9.3 GB | dense | 15.4 |
+| 34 | qwen2.5:14b | 9.0 GB | dense | 15.3 |
+| 35 | phi4 | 9.1 GB | dense | 15.3 |
+| 36 | qwen2.5-coder:14b | 9.0 GB | dense | 14.9 |
+| 37 | nemotron-3-super:120b | 86 GB | hybrid | 13.2 |
+| 38 | codestral:22b | 12 GB | dense | 11.4 |
+| 39 | mistral-small:24b | 14 GB | dense | 9.4 |
+| 40 | gemma2:27b | 15 GB | dense | 9.2 |
+| 41 | gemma3:27b | 17 GB | dense | 7.9 |
+| 42 | codellama:34b | 19 GB | dense | 7.8 |
+| 43 | deepseek-coder:33b | 18 GB | dense | 7.5 |
+| 44 | exaone-deep:32b | 19 GB | dense | 7.1 |
+| 45 | qwen2.5:32b | 19 GB | dense | 7.0 |
+| 46 | deepseek-r1:32b | 19 GB | dense | 6.9 |
+| 47 | qwq:32b | 19 GB | dense | 6.9 |
+| 48 | aya-expanse:32b | 19 GB | dense | 6.8 |
+| 49 | qwen3-vl:32b | 20 GB | dense | 6.8 |
+
+_Arch labels: MoE = mixture-of-experts (few active params); hybrid = Mamba/attention hybrid;
+dense = all params active per token._
+</details>
 
 ---
 
