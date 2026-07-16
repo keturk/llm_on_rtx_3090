@@ -30,6 +30,23 @@ COMPARE_MODELS=(
     gemma2:27b qwen2.5:32b codellama:34b deepseek-coder:33b
 )
 BIG_MODELS=( nemotron-3-nano:30b nemotron-3-super:120b )
+# "full": the complete cross-machine suite — already-installed first (fast rows land early),
+# then everything the RTX 3090 ran but the GX10 lacked (downloaded on demand).
+FULL_MODELS=(
+    # --- typically already present ---
+    llama3.2:3b llama3.1:8b mistral:7b qwen2.5:7b phi3:14b qwen2.5:14b
+    gemma2:27b qwen2.5:32b codellama:34b deepseek-coder:33b
+    nemotron-3-nano:30b nemotron-3-super:120b
+    # --- rest of the suite ---
+    smollm2:1.7b granite3.1-moe:3b granite3-dense:8b nemotron-mini:4b
+    ministral-3:3b ministral-3:8b ministral-3:14b phi3.5 phi4-mini phi4
+    qwen3:8b qwen3:14b qwen3:30b-a3b qwen3-coder:30b qwen3-vl:8b qwen3-vl:32b
+    deepseek-r1:8b deepseek-r1:14b deepseek-r1:32b
+    gemma3:4b gemma3:12b gemma3:27b glm4:9b
+    falcon3:7b falcon3:10b hermes3:8b marco-o1:7b dolphin3 olmo2:13b
+    exaone-deep:7.8b exaone-deep:32b aya-expanse:8b aya-expanse:32b
+    codestral:22b mistral-small:24b qwen2.5-coder:14b qwq:32b
+)
 
 PROMPT="Explain the difference between supervised and unsupervised machine learning in 3 sentences"
 
@@ -39,7 +56,7 @@ for arg in "$@"; do
     case "$arg" in
         --pull) DO_PULL=1 ;;
         -y|--yes) ASSUME_YES=1 ;;
-        --list) echo "compare : ${COMPARE_MODELS[*]}"; echo "big     : ${BIG_MODELS[*]}"; echo "all     : compare + big"; exit 0 ;;
+        --list) echo "compare : ${COMPARE_MODELS[*]}"; echo "big     : ${BIG_MODELS[*]}"; echo "all     : compare + big"; echo "full    : ${#FULL_MODELS[@]} models (complete cross-machine suite)"; exit 0 ;;
         -h|--help) sed -n '2,22p' "$0"; exit 0 ;;
         -*) echo "Unknown option: $arg" >&2; exit 1 ;;
         *) SET="$arg" ;;
@@ -49,6 +66,7 @@ case "$SET" in
     compare) MODELS=("${COMPARE_MODELS[@]}") ;;
     big)     MODELS=("${BIG_MODELS[@]}") ;;
     all)     MODELS=("${COMPARE_MODELS[@]}" "${BIG_MODELS[@]}") ;;
+    full)    MODELS=("${FULL_MODELS[@]}") ;;
     *)       read -r -a MODELS <<<"$SET" ;;
 esac
 
@@ -83,18 +101,12 @@ RESULTS_FILE="${RESULTS_DIR}/${TAG}_benchmark_${TIMESTAMP}.md"
 installed_list="$("${RUNNER[@]}" list 2>/dev/null)"
 is_installed() { grep -qE "^$1([[:space:]]|:latest)" <<<"$installed_list"; }
 
-# --- pull missing -----------------------------------------------------------
-missing=(); for m in "${MODELS[@]}"; do is_installed "$m" || missing+=("$m"); done
-if [ "${#missing[@]}" -gt 0 ]; then
-    echo "Missing (${#missing[@]}): ${missing[*]}"
-    if [ "$DO_PULL" -eq 1 ] && [ "$ASSUME_YES" -ne 1 ]; then
-        read -rp "Pull ${#missing[@]} now? (y/N) " a; [[ "$a" =~ ^[Yy]$ ]] || DO_PULL=0
-    fi
-    if [ "$DO_PULL" -eq 1 ]; then
-        for m in "${missing[@]}"; do echo "📥 $m"; "${RUNNER[@]}" pull "$m"; done
-        installed_list="$("${RUNNER[@]}" list 2>/dev/null)"
-    else
-        echo "   (skipping missing — rerun with --pull to download)"
+# --- optional confirm before pulling (pulls happen per-model in the run loop) ---
+if [ "$DO_PULL" -eq 1 ] && [ "$ASSUME_YES" -ne 1 ]; then
+    miss=0; for m in "${MODELS[@]}"; do is_installed "$m" || miss=$((miss+1)); done
+    if [ "$miss" -gt 0 ]; then
+        read -rp "Pull $miss missing model(s) as the run proceeds? (y/N) " a
+        [[ "$a" =~ ^[Yy]$ ]] || DO_PULL=0
     fi
 fi
 
@@ -125,7 +137,15 @@ bench_one() {
 
 for model in "${MODELS[@]}"; do
     if ! is_installed "$model"; then
-        printf '| %s | — | _not installed_ | — |\n' "$model" | tee -a "$RESULTS_FILE"; continue
+        if [ "$DO_PULL" -eq 1 ]; then
+            echo "📥 pulling $model …" >&2
+            if ! "${RUNNER[@]}" pull "$model" >/dev/null 2>&1; then
+                printf '| %s | — | _pull failed_ | — |\n' "$model" | tee -a "$RESULTS_FILE"; continue
+            fi
+            installed_list="$("${RUNNER[@]}" list 2>/dev/null)"
+        else
+            printf '| %s | — | _not installed_ | — |\n' "$model" | tee -a "$RESULTS_FILE"; continue
+        fi
     fi
     echo "→ $model …" >&2
     res="$(bench_one "$model")"; rate="${res%%|*}"; rest="${res#*|}"; count="${rest%%|*}"; size="${rest##*|}"
