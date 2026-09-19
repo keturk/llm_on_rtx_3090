@@ -7,8 +7,9 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-User=staging-user
-WorkingDirectory=/home/staging-user/llm_on_rtx_3090/llm-docker
+# Both lines are rewritten by scripts/setup-t7920.sh for the installing user and checkout.
+User=llmuser
+WorkingDirectory=/home/llmuser/llm_on_rtx_3090/llm-docker
 # COMPOSE_FILE comes from .env (base + T7920 override). Forge is started on demand
 # with scripts/start-forge.sh rather than at boot: it is a 10 GB VRAM commitment.
 ExecStart=/usr/bin/docker compose up -d

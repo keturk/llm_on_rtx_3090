@@ -1,17 +1,18 @@
 #!/bin/bash
-# setup-t7920.sh -- bring up the LLM stack on the Dell Precision T7920 ("Staging-Server").
+# setup-t7920.sh -- bring up the LLM stack on a Dell Precision T7920 shared with other stacks.
 #
 # Assumes the host already has the driver, Docker CE + Compose and the NVIDIA container
 # toolkit (System_Setup.md is done there by the server rebuild). This script does the
 # rest of the Class A path for this machine's storage layout:
 #
 #   1. directory contract: hot tier on the OS NVMe, cold tier + working data on the HDD
-#   2. .env from .env.t7920 (paths, ports that do not collide with the CurvAero stack)
+#   2. .env from .env.t7920 (paths, ports that do not collide with the other tenants)
 #   3. Ollama up, GPU proven from inside the container
 #   4. boot persistence (llm-stack.t7920.service) and the weekly tiering job (anacron)
 #   5. a first small model, timed
 #
-# Run as staging-user from llm-docker/:   ./scripts/setup-t7920.sh
+# Run as the user that will own the model store, from llm-docker/:   ./scripts/setup-t7920.sh
+# (the boot unit and the weekly tier job are rendered for that user and this checkout)
 # Idempotent; re-run after changing .env.t7920.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,8 +25,8 @@ die()  { printf '  \033[31mx\033[0m %s\n' "$1"; exit 1; }
 echo; echo "T7920 LLM stack setup ($(hostname), $(date +%F))"; echo "----------------------------------------------"
 
 echo "Preflight"
-[ "$(id -un)" = staging-user ] || die "run as staging-user (owner of the model store)"
-id -nG | grep -qw docker || die "staging-user is not in the docker group for this session -- log out and back in (or run: newgrp docker)"
+[ "$(id -u)" -ne 0 ] || die "run as the user that owns the model store, not root"
+id -nG | grep -qw docker || die "$USER is not in the docker group for this session -- log out and back in (or run: newgrp docker)"
 docker info >/dev/null 2>&1 || die "docker is not answering"
 mountpoint -q /mnt/data || die "/mnt/data (HDD) is not mounted"
 nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -q . || die "nvidia-smi sees no GPU"
@@ -49,6 +50,7 @@ cp .env.t7920 .env
 chmod +x scripts/*.sh
 ok ".env <- .env.t7920 (COMPOSE_FILE=$COMPOSE_FILE, TGI on $TGI_PORT)"
 for p in "$OLLAMA_PORT" "$FORGE_PORT" "$VLLM_PORT" "$TGI_PORT"; do
+  for r in ${RESERVED_PORTS:-}; do [ "$p" = "$r" ] && warn "port $p is listed in RESERVED_PORTS"; done
   if ss -tln | awk '{print $4}' | grep -qE ":$p$"; then
     docker ps --format '{{.Names}} {{.Ports}}' | grep -q ":$p->" || warn "port $p is already in use by something outside this stack"
   fi
@@ -64,13 +66,14 @@ gpu=$(docker exec ollama nvidia-smi --query-gpu=name,memory.total --format=csv,n
 docker exec ollama test -d "$COLD_MODELS_PATH/ollama-cold/blobs" && ok "cold tier visible inside the container at the same path" || die "cold tier mount missing in the container"
 
 echo "Persistence"
-sudo install -m 0644 systemd/llm-stack.t7920.service /etc/systemd/system/llm-stack.service
+sed -e "s#^User=.*#User=$USER#" -e "s#^WorkingDirectory=.*#WorkingDirectory=$REPO_DIR/llm-docker#" \
+  systemd/llm-stack.t7920.service | sudo tee /etc/systemd/system/llm-stack.service >/dev/null
 sudo systemctl daemon-reload && sudo systemctl enable llm-stack.service >/dev/null 2>&1
 ok "llm-stack.service enabled (docker compose up -d at boot)"
 sudo tee /etc/cron.weekly/ollama-tier >/dev/null <<EOF
 #!/bin/bash
 # Weekly (anacron): promote popular models to the NVMe, demote idle ones to the HDD.
-su - staging-user -c '$REPO_DIR/llm-docker/scripts/ollama-tier.sh auto' >> $DATA_PATH/logs/tier-cron.log 2>&1
+su - $USER -c '$REPO_DIR/llm-docker/scripts/ollama-tier.sh auto' >> $DATA_PATH/logs/tier-cron.log 2>&1
 EOF
 sudo chmod 755 /etc/cron.weekly/ollama-tier
 ok "weekly tiering job installed (/etc/cron.weekly/ollama-tier)"
@@ -87,4 +90,4 @@ echo; echo "Done. Next:"
 echo "  docker exec -it ollama ollama pull qwen3:14b          # or any model from docs/shared/Model_Guide.md"
 echo "  ./scripts/ollama-tier.sh list                          # tiers, sizes, usage"
 echo "  ./scripts/start-forge.sh                               # optional image generation on :$FORGE_PORT"
-echo "  API: http://10.94.0.101:$OLLAMA_PORT  (reachable on the LAN; no auth)"
+echo "  API: http://$(hostname -I | awk '{print $1}'):$OLLAMA_PORT  (reachable on the LAN; no auth)"

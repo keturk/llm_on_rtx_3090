@@ -1,4 +1,4 @@
-# Dell Precision T7920 (RTX 3090) -- "Staging-Server"
+# Dell Precision T7920 (RTX 3090) -- shared host
 
 Same hardware class as the [T5820](../t5820/README.md) -- x86-64, one discrete **24 GB RTX 3090**,
 Ollama in Docker -- on a box that is **shared with other projects** and has a different
@@ -9,12 +9,12 @@ storage shape. Everything in the T5820 guides applies; this page is only the dif
 | CPU / RAM | 2x Xeon Silver 4114 (20 cores), 128 GB |
 | GPU | NVIDIA RTX 3090, 24 GB (discrete) |
 | OS | Ubuntu 24.04 Desktop, driver 595-open (held), Docker CE 29 + Compose v5, NVIDIA container toolkit |
-| Host user | `staging-user`; repo at `~/llm_on_rtx_3090` |
+| Host user | whoever runs `setup-t7920.sh` (unit and cron are rendered for that user) |
 | Hot model tier | `/srv/llm-models` -- OS NVMe, ~300 GB budget |
 | Cold model tier | `/mnt/data/llm-models` -- 8 TB HDD |
 | Working data | `/mnt/data/llm-data` -- HDD (logs, benchmarks, tier ledger) |
 | Ollama | Docker, port **11434**, `OLLAMA_KEEP_ALIVE=30m` |
-| Ports taken by other tenants | 8080 (CurvAero gateway), 8085, 9000/9001, 3000, 9090 -- TGI moved to **8081** |
+| Ports owned by other tenants | `RESERVED_PORTS` in `.env.t7920` (8080 among them) -- TGI moved to **8081** |
 
 ## Why two tiers
 
@@ -54,5 +54,5 @@ keep-alive), [`systemd/llm-stack.t7920.service`](../../../llm-docker/systemd/llm
   `:11434` is reachable from the whole LAN without authentication -- fine for a trusted
   network, not for anything else.
 - The stack is its own Compose project (`llm-docker`, network `llm-network`); it never shares
-  a network or a volume with the CurvAero project.
+  a network or a volume with the other stacks on the machine.
 - Forge is not started at boot (10 GB of VRAM); `./scripts/start-forge.sh` when needed.
