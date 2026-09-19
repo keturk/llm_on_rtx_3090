@@ -1,0 +1,24 @@
+[Unit]
+Description=LLM stack (ollama) via docker compose -- T7920
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=staging-user
+WorkingDirectory=/home/staging-user/llm_on_rtx_3090/llm-docker
+# COMPOSE_FILE comes from .env (base + T7920 override). Forge is started on demand
+# with scripts/start-forge.sh rather than at boot: it is a 10 GB VRAM commitment.
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose stop
+
+# A container that fails at task-creation (e.g. an NVIDIA driver upgrade with no
+# reboot yet) is parked in "Created" and no restart policy will ever retry it.
+# Re-running `up -d` at boot is what recovers it.
+Restart=on-failure
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

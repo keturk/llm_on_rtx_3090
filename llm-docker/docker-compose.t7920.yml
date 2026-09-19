@@ -1,0 +1,13 @@
+# T7920 override, layered on docker-compose.yml via COMPOSE_FILE in .env.t7920.
+#
+# Two things the reference machine does not need:
+#   - the cold tier: scripts/ollama-tier.sh moves rarely-used blobs to the HDD and leaves
+#     symlinks in the store. The targets are absolute host paths, so the HDD directory
+#     must be visible inside the container at the SAME path or the symlinks dangle.
+#   - OLLAMA_KEEP_ALIVE from .env, so model residency is a per-machine setting.
+services:
+  ollama:
+    volumes:
+      - ${COLD_MODELS_PATH:-/mnt/data/llm-models}/ollama-cold:${COLD_MODELS_PATH:-/mnt/data/llm-models}/ollama-cold
+    environment:
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
