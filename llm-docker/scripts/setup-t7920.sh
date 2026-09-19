@@ -38,6 +38,7 @@ sudo mkdir -p "$MODELS_PATH"/{ollama,vllm,tgi,gguf} \
               "$MODELS_PATH"/stable-diffusion/models/{Stable-diffusion,VAE,Lora,ControlNet,ESRGAN} \
               "$MODELS_PATH"/stable-diffusion/{outputs,embeddings} \
               "$COLD_MODELS_PATH"/{ollama-cold/blobs,stable-diffusion-archive} \
+              "$MODELS_PATH"/whisper "$DATA_PATH"/open-webui \
               "$DATA_PATH"/{logs/{ollama,vllm,tgi},benchmarks,datasets,exports,tier}
 sudo chown -R "$USER:$USER" "$MODELS_PATH" "$COLD_MODELS_PATH" "$DATA_PATH"
 ln -sfn "$MODELS_PATH" ~/models; ln -sfn "$DATA_PATH" ~/data
@@ -49,14 +50,14 @@ echo "Configuration"
 cp .env.t7920 .env
 chmod +x scripts/*.sh
 ok ".env <- .env.t7920 (COMPOSE_FILE=$COMPOSE_FILE, TGI on $TGI_PORT)"
-for p in "$OLLAMA_PORT" "$FORGE_PORT" "$VLLM_PORT" "$TGI_PORT"; do
+for p in "$OLLAMA_PORT" "$FORGE_PORT" "$VLLM_PORT" "$TGI_PORT" "${WHISPER_PORT:-9000}" "${TTS_PORT:-8880}" "${WEBUI_PORT:-8080}"; do
   for r in ${RESERVED_PORTS:-}; do [ "$p" = "$r" ] && warn "port $p is listed in RESERVED_PORTS"; done
   if ss -tln | awk '{print $4}' | grep -qE ":$p$"; then
     docker ps --format '{{.Names}} {{.Ports}}' | grep -q ":$p->" || warn "port $p is already in use by something outside this stack"
   fi
 done
 
-echo "Ollama"
+echo "Stack (ollama + speech + web UI)"
 docker compose up -d
 for i in $(seq 1 30); do curl -fsS "http://127.0.0.1:$OLLAMA_PORT/api/version" >/dev/null 2>&1 && break; sleep 2; done
 curl -fsS "http://127.0.0.1:$OLLAMA_PORT/api/version" >/dev/null || { docker logs --tail 30 ollama; die "ollama did not answer on :$OLLAMA_PORT"; }
@@ -64,6 +65,11 @@ ok "ollama $(curl -fsS "http://127.0.0.1:$OLLAMA_PORT/api/version" | jq -r .vers
 gpu=$(docker exec ollama nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null || true)
 [ -n "$gpu" ] && ok "GPU inside the container: $gpu" || die "the ollama container cannot see the GPU"
 docker exec ollama test -d "$COLD_MODELS_PATH/ollama-cold/blobs" && ok "cold tier visible inside the container at the same path" || die "cold tier mount missing in the container"
+for svc in whisper:${WHISPER_PORT:-9000}:/docs kokoro:${TTS_PORT:-8880}:/v1/audio/voices open-webui:${WEBUI_PORT:-8080}:/health; do
+  name=${svc%%:*}; rest=${svc#*:}; port=${rest%%:*}; path=${rest#*:}
+  for i in $(seq 1 45); do curl -fsS -o /dev/null "http://127.0.0.1:$port$path" 2>/dev/null && break; sleep 2; done
+  curl -fsS -o /dev/null "http://127.0.0.1:$port$path" 2>/dev/null && ok "$name answering on :$port" || warn "$name not answering on :$port yet (docker logs $name)"
+done
 
 echo "Persistence"
 sed -e "s#^User=.*#User=$USER#" -e "s#^WorkingDirectory=.*#WorkingDirectory=$REPO_DIR/llm-docker#" \
@@ -89,5 +95,7 @@ docker exec ollama ollama ps | tail -n +2 | grep -qi "100% GPU" && ok "model ful
 echo; echo "Done. Next:"
 echo "  docker exec -it ollama ollama pull qwen3:14b          # or any model from docs/shared/Model_Guide.md"
 echo "  ./scripts/ollama-tier.sh list                          # tiers, sizes, usage"
-echo "  ./scripts/start-forge.sh                               # optional image generation on :$FORGE_PORT"
+echo "  ./scripts/start-forge.sh                               # image generation on :$FORGE_PORT (on demand, ~10 GB VRAM)"
+echo "  Open WebUI: http://$(hostname -I | awk '{print $1}'):${WEBUI_PORT:-8080}   (create the FIRST account now -- it becomes admin)"
+echo "  Whisper:    http://$(hostname -I | awk '{print $1}'):${WHISPER_PORT:-9000}/docs   Kokoro TTS: :${TTS_PORT:-8880}/web"
 echo "  API: http://$(hostname -I | awk '{print $1}'):$OLLAMA_PORT  (reachable on the LAN; no auth)"

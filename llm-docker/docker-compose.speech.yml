@@ -1,0 +1,42 @@
+# Speech engines, sharing the card with Ollama. Both hold no VRAM until first use.
+#
+#   whisper  speech -> text.  onerahmet/openai-whisper-asr-webservice, faster-whisper backend.
+#            POST /asr (multipart "audio_file"), docs at /docs. Model is downloaded into
+#            the cache mount on first request; without that mount every restart re-downloads.
+#   kokoro   text -> speech.  Kokoro-FastAPI, OpenAI-compatible: POST /v1/audio/speech,
+#            voices at /v1/audio/voices, web player at /web. Weights are baked into the image.
+#
+# DERIVED: the images, settings and mounts come from each project's own run documentation;
+# nobody has verified them through this repo yet. Ports come from .env (WHISPER_PORT,
+# TTS_PORT); the reference .env leaves them at upstream defaults.
+services:
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:v1.9.1-gpu
+    container_name: whisper
+    restart: unless-stopped
+    runtime: nvidia
+    ports:
+      - "0.0.0.0:${WHISPER_PORT:-9000}:9000"
+    environment:
+      - ASR_ENGINE=faster_whisper
+      - ASR_MODEL=${WHISPER_MODEL:-large-v3-turbo}
+      - ASR_MODEL_PATH=/root/.cache/whisper
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - ${MODELS_PATH:-/mnt/llm-models}/whisper:/root/.cache
+
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-gpu:latest
+    container_name: kokoro
+    restart: unless-stopped
+    runtime: nvidia
+    ports:
+      - "0.0.0.0:${TTS_PORT:-8880}:8880"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+networks:
+  default:
+    name: llm-network
