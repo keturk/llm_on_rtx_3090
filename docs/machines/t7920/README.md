@@ -6,7 +6,7 @@ storage shape. Everything in the T5820 guides applies; this page is only the dif
 
 | | |
 |---|---|
-| CPU / RAM | 2x Xeon Silver 4114 (20 cores), 128 GB |
+| CPU / RAM | 2x Xeon Gold 5222 (16 threads), 128 GB |
 | GPU | NVIDIA RTX 3090, 24 GB (discrete) |
 | OS | Ubuntu 24.04 Desktop, driver 595-open (held), Docker CE 29 + Compose v5, NVIDIA container toolkit |
 | Host user | whoever runs `setup-t7920.sh` (unit and cron are rendered for that user) |

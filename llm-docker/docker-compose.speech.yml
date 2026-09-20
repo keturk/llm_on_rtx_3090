@@ -27,7 +27,7 @@ services:
       - ${MODELS_PATH:-/mnt/llm-models}/whisper:/root/.cache
 
   kokoro:
-    image: ghcr.io/remsky/kokoro-fastapi-gpu:latest
+    image: ghcr.io/remsky/kokoro-fastapi-gpu:v0.9.0
     container_name: kokoro
     restart: unless-stopped
     runtime: nvidia
